@@ -1,0 +1,74 @@
+---
+// Массив с особенностями проекта
+const features = [
+  {
+    title: 'Островная архитектура',
+    description: 'Astro разбивает ваш UI на изолированные острова компонентов, что улучшает производительность и уменьшает объем JavaScript.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+          </svg>`
+  },
+  {
+    title: 'Мультифреймворк',
+    description: 'Используйте любой JavaScript-фреймворк (React, Vue, Svelte и др.) для создания интерактивных компонентов.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+          </svg>`
+  },
+  {
+    title: 'Стилизация с Tailwind CSS',
+    description: 'Создавайте современный дизайн без написания CSS благодаря мощной системе utility-классов Tailwind.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+          </svg>`
+  },
+  {
+    title: 'Маршрутизация на основе файлов',
+    description: 'Простая и понятная система маршрутизации на основе структуры файлов в директории pages.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>`
+  },
+  {
+    title: 'Высокая производительность',
+    description: 'Максимально быстрая загрузка страниц благодаря генерации статических HTML файлов и минимуму JavaScript.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>`
+  },
+  {
+    title: 'Адаптивная темная тема',
+    description: 'Встроенная поддержка светлой и темной темы с автоматическим определением системных настроек.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>`
+  },
+];
+---
+
+<section id="features" class="py-16 bg-white dark:bg-gray-900">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        Особенности проекта
+      </h2>
+      <p class="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+        Современный стек технологий для создания быстрых, оптимизированных и удобных веб-сайтов
+      </p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {features.map(feature => (
+        <div class="bg-gray-50 dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+          <div class="text-primary-600 dark:text-primary-400 mb-4" set:html={feature.icon} />
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            {feature.title}
+          </h3>
+          <p class="text-gray-700 dark:text-gray-300">
+            {feature.description}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section> 

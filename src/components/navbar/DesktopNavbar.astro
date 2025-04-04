@@ -1,0 +1,133 @@
+---
+import Logo from '../Logo.astro';
+import Button from '../Button.astro';
+import NavbarItem from './NavbarItem.astro';
+import ModeToggle from '../ModeToggle.astro';
+
+export interface Props {
+  navItems: {
+    link: string;
+    title: string;
+    target?: string;
+  }[];
+}
+
+const { navItems } = Astro.props;
+---
+
+<div class="desktop-navbar" id="desktop-navbar">
+  <div class="navbar-background" id="navbar-bg"></div>
+  <div class="navbar-content">
+    <div class="flex-row">
+      <Logo />
+      <div class="navbar-items">
+        {navItems.map((item) => (
+          <NavbarItem href={item.link} target={item.target}>
+            {item.title}
+          </NavbarItem>
+        ))}
+      </div>
+    </div>
+    <div class="navbar-actions">
+      <ModeToggle />
+      <Button variant="simple" href="/login">Войти</Button>
+      <Button href="/signup">Регистрация</Button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Логика изменения фона навбара при прокрутке
+  document.addEventListener('DOMContentLoaded', () => {
+    const navbar = document.getElementById('desktop-navbar');
+    const navbarBg = document.getElementById('navbar-bg');
+    
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        navbar.classList.add('with-background');
+      } else {
+        navbar.classList.remove('with-background');
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Инициализация состояния
+  });
+</script>
+
+<style>
+  .desktop-navbar {
+    width: 100%;
+    display: flex;
+    position: relative;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+  
+  .navbar-background {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 9999px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--bg-color-rgb), 0.8),
+      rgba(var(--bg-color-rgb), 0.4),
+      rgba(var(--bg-color-rgb), 0.8)
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .desktop-navbar.with-background {
+    box-shadow: 
+      0px -2px 0px 0px rgba(var(--text-color-rgb), 0.1),
+      0px 2px 0px 0px rgba(var(--text-color-rgb), 0.1);
+  }
+  
+  .desktop-navbar.with-background .navbar-background {
+    opacity: 1;
+  }
+  
+  .navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    z-index: 1;
+  }
+  
+  .flex-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .navbar-items {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 1rem;
+  }
+  
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .desktop-navbar {
+      display: none;
+    }
+  }
+</style> 

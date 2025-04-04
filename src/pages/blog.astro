@@ -1,0 +1,346 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Метаданные страницы
+const title = "Блог";
+
+// Пример постов для блога
+const posts = [
+  {
+    id: 1,
+    title: "Использование Canvas для анимации текста",
+    summary: "Как создать красивую анимацию текста с использованием HTML Canvas и JavaScript...",
+    date: "15 мая 2023",
+    author: "Дизайнер Частиц",
+    image: "https://picsum.photos/seed/post1/600/400",
+    tags: ["Canvas", "JavaScript", "Анимация"]
+  },
+  {
+    id: 2,
+    title: "Темная тема на современных веб-сайтах",
+    summary: "Реализация переключения между темной и светлой темой с CSS переменными...",
+    date: "3 июня 2023",
+    author: "Тёмный Дизайн",
+    image: "https://picsum.photos/seed/post2/600/400",
+    tags: ["CSS", "UX", "Дизайн"]
+  },
+  {
+    id: 3,
+    title: "Оптимизация производительности в анимациях",
+    summary: "Как создавать плавные анимации с высокой производительностью даже на слабых устройствах...",
+    date: "20 июля 2023",
+    author: "Перфоманс Маг",
+    image: "https://picsum.photos/seed/post3/600/400",
+    tags: ["Оптимизация", "JavaScript", "Анимация"]
+  },
+  {
+    id: 4,
+    title: "Веб-дизайн тренды 2023 года",
+    summary: "Обзор самых популярных трендов веб-дизайна, которые доминируют в этом году...",
+    date: "5 августа 2023",
+    author: "Трендсеттер",
+    image: "https://picsum.photos/seed/post4/600/400",
+    tags: ["Дизайн", "Тренды", "UI"]
+  }
+];
+---
+
+<Layout title={title}>
+	<canvas id="scene"></canvas>
+	<div class="blog-container">
+		<h1>Блог</h1>
+		<div class="blog-intro">
+			<p>Добро пожаловать в наш блог о веб-разработке, анимациях и интерактивном дизайне.</p>
+		</div>
+		
+		<div class="posts-grid">
+			{posts.map(post => (
+				<article class="post-card">
+					<div class="post-image">
+						<img src={post.image} alt={post.title} />
+					</div>
+					<div class="post-content">
+						<h2>{post.title}</h2>
+						<div class="post-meta">
+							<span class="post-date">{post.date}</span>
+							<span class="post-author">Автор: {post.author}</span>
+						</div>
+						<p>{post.summary}</p>
+						<div class="post-tags">
+							{post.tags.map(tag => (
+								<span class="tag">{tag}</span>
+							))}
+						</div>
+						<a href={`/blog/${post.id}`} class="read-more">Читать далее</a>
+					</div>
+				</article>
+			))}
+		</div>
+	</div>
+</Layout>
+
+<script>
+	// Упрощенная версия анимации для фона страницы (такая же как на странице About)
+	var canvas = document.querySelector("#scene"),
+		ctx = canvas.getContext("2d"),
+		particles = [],
+		amount = 150,
+		mouse = {x: 0, y: 0},
+		radius = 1;
+
+	function getParticleColors() {
+		const colorsString = getComputedStyle(document.documentElement)
+			.getPropertyValue('--particle-colors')
+			.trim();
+		return colorsString.split(',').map(color => color.trim());
+	}
+
+	var colors = getParticleColors();
+	var ww = canvas.width = window.innerWidth;
+	var wh = canvas.height = window.innerHeight;
+
+	function Particle() {
+		this.x = Math.random() * ww;
+		this.y = Math.random() * wh;
+		this.r = Math.random() * 3 + 1;
+		this.vx = (Math.random() - 0.5) * 2;
+		this.vy = (Math.random() - 0.5) * 2;
+		this.color = colors[Math.floor(Math.random() * colors.length)];
+	}
+
+	Particle.prototype.render = function() {
+		this.x += this.vx;
+		this.y += this.vy;
+		
+		// Отскок от краев
+		if (this.x < 0 || this.x > ww) this.vx = -this.vx;
+		if (this.y < 0 || this.y > wh) this.vy = -this.vy;
+		
+		// Взаимодействие с мышью
+		var a = this.x - mouse.x;
+		var b = this.y - mouse.y;
+		var distance = Math.sqrt(a * a + b * b);
+		
+		if (distance < (radius * 70)) {
+			this.vx = a * 0.01;
+			this.vy = b * 0.01;
+		}
+		
+		// Рисуем частицу
+		ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+		ctx.fill();
+		
+		// Соединяем близкие частицы линиями
+		for (var i = 0; i < particles.length; i++) {
+			var p2 = particles[i];
+			var dx = this.x - p2.x;
+			var dy = this.y - p2.y;
+			var dist = Math.sqrt(dx * dx + dy * dy);
+			
+			if (dist < 100) {
+				ctx.beginPath();
+				ctx.strokeStyle = this.color;
+				ctx.globalAlpha = 0.5 - dist / 100;
+				ctx.lineWidth = 0.5;
+				ctx.moveTo(this.x, this.y);
+				ctx.lineTo(p2.x, p2.y);
+				ctx.stroke();
+				ctx.globalAlpha = 1;
+			}
+		}
+	}
+
+	function onMouseMove(e) {
+		mouse.x = e.clientX;
+		mouse.y = e.clientY;
+	}
+
+	function onTouchMove(e) {
+		if (e.touches.length > 0) {
+			mouse.x = e.touches[0].clientX;
+			mouse.y = e.touches[0].clientY;
+		}
+	}
+
+	function onTouchEnd(e) {
+		mouse.x = -9999;
+		mouse.y = -9999;
+	}
+
+	function initScene() {
+		colors = getParticleColors();
+		ww = canvas.width = window.innerWidth;
+		wh = canvas.height = window.innerHeight;
+		
+		particles = [];
+		for (var i = 0; i < amount; i++) {
+			particles.push(new Particle());
+		}
+	}
+
+	function render() {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		for (var i = 0; i < amount; i++) {
+			particles[i].render();
+		}
+		requestAnimationFrame(render);
+	}
+
+	// Добавляем в глобальную область
+	window.initScene = initScene;
+
+	window.addEventListener("resize", initScene);
+	window.addEventListener("mousemove", onMouseMove);
+	window.addEventListener("touchmove", onTouchMove);
+	window.addEventListener("touchend", onTouchEnd);
+	
+	initScene();
+	requestAnimationFrame(render);
+</script>
+
+<style>
+	.blog-container {
+		max-width: 1200px;
+		margin: 120px auto 40px;
+		padding: 2rem;
+		position: relative;
+		z-index: 10;
+	}
+	
+	h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1.5rem;
+		text-align: center;
+		background: linear-gradient(90deg, #5da9e9, #f25757);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+	
+	.blog-intro {
+		text-align: center;
+		margin-bottom: 2rem;
+		font-size: 1.1rem;
+		color: var(--text-color);
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	.posts-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 2rem;
+	}
+	
+	.post-card {
+		background-color: rgba(var(--bg-color-rgb), 0.7);
+		backdrop-filter: blur(10px);
+		border-radius: 16px;
+		overflow: hidden;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+		transition: transform 0.3s ease, box-shadow 0.3s ease;
+	}
+	
+	.post-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+	}
+	
+	.post-image {
+		height: 200px;
+		overflow: hidden;
+	}
+	
+	.post-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.5s ease;
+	}
+	
+	.post-card:hover .post-image img {
+		transform: scale(1.05);
+	}
+	
+	.post-content {
+		padding: 1.5rem;
+		color: var(--text-color);
+	}
+	
+	.post-content h2 {
+		margin-top: 0;
+		margin-bottom: 0.75rem;
+		font-size: 1.5rem;
+	}
+	
+	.post-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-bottom: 1rem;
+		font-size: 0.85rem;
+		opacity: 0.8;
+	}
+	
+	.post-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 1rem;
+		margin-bottom: 1rem;
+	}
+	
+	.tag {
+		background-color: rgba(var(--text-color-rgb), 0.1);
+		padding: 0.25rem 0.75rem;
+		border-radius: 20px;
+		font-size: 0.8rem;
+	}
+	
+	.read-more {
+		display: inline-block;
+		margin-top: 0.5rem;
+		color: var(--text-color);
+		text-decoration: none;
+		font-weight: 500;
+		position: relative;
+		transition: color 0.3s;
+	}
+	
+	.read-more:after {
+		content: '';
+		position: absolute;
+		width: 100%;
+		height: 1px;
+		bottom: -2px;
+		left: 0;
+		background: linear-gradient(90deg, #5da9e9, #f25757);
+		transform: scaleX(0);
+		transform-origin: right;
+		transition: transform 0.3s ease;
+	}
+	
+	.read-more:hover:after {
+		transform: scaleX(1);
+		transform-origin: left;
+	}
+	
+	@media (max-width: 768px) {
+		.blog-container {
+			margin-top: 100px;
+			padding: 1.5rem;
+			width: 90%;
+		}
+		
+		h1 {
+			font-size: 2rem;
+		}
+		
+		.posts-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style> 

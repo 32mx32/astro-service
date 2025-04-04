@@ -1,0 +1,218 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Метаданные страницы
+const title = "О проекте";
+---
+
+<Layout title={title}>
+	<canvas id="scene"></canvas>
+	<div class="about-container">
+		<h1>О проекте</h1>
+		<div class="about-content">
+			<p>
+				Этот проект демонстрирует возможности интерактивной анимации текста с помощью частиц.
+				Текстовые частицы - это современный подход к созданию динамических визуальных эффектов,
+				которые делают веб-сайт уникальным и запоминающимся.
+			</p>
+			<p>
+				Используемые технологии:
+			</p>
+			<ul>
+				<li>Astro - современный фреймворк для создания быстрых веб-сайтов</li>
+				<li>Canvas API - для рисования и анимации</li>
+				<li>CSS переменные - для поддержки темной темы</li>
+				<li>Современный дизайн навигации с адаптивным интерфейсом</li>
+			</ul>
+			<p>
+				Интерактивные возможности:
+			</p>
+			<ul>
+				<li>Изменение текста в реальном времени</li>
+				<li>Взаимодействие с мышью для управления поведением частиц</li>
+				<li>Автоматическая адаптация к темной и светлой теме</li>
+				<li>Полностью адаптивный интерфейс для всех устройств</li>
+			</ul>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	// Упрощенная версия анимации для фона страницы
+	var canvas = document.querySelector("#scene"),
+		ctx = canvas.getContext("2d"),
+		particles = [],
+		amount = 150,
+		mouse = {x: 0, y: 0},
+		radius = 1;
+
+	function getParticleColors() {
+		const colorsString = getComputedStyle(document.documentElement)
+			.getPropertyValue('--particle-colors')
+			.trim();
+		return colorsString.split(',').map(color => color.trim());
+	}
+
+	var colors = getParticleColors();
+	var ww = canvas.width = window.innerWidth;
+	var wh = canvas.height = window.innerHeight;
+
+	function Particle() {
+		this.x = Math.random() * ww;
+		this.y = Math.random() * wh;
+		this.r = Math.random() * 3 + 1;
+		this.vx = (Math.random() - 0.5) * 2;
+		this.vy = (Math.random() - 0.5) * 2;
+		this.color = colors[Math.floor(Math.random() * colors.length)];
+	}
+
+	Particle.prototype.render = function() {
+		this.x += this.vx;
+		this.y += this.vy;
+		
+		// Отскок от краев
+		if (this.x < 0 || this.x > ww) this.vx = -this.vx;
+		if (this.y < 0 || this.y > wh) this.vy = -this.vy;
+		
+		// Взаимодействие с мышью
+		var a = this.x - mouse.x;
+		var b = this.y - mouse.y;
+		var distance = Math.sqrt(a * a + b * b);
+		
+		if (distance < (radius * 70)) {
+			this.vx = a * 0.01;
+			this.vy = b * 0.01;
+		}
+		
+		// Рисуем частицу
+		ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+		ctx.fill();
+		
+		// Соединяем близкие частицы линиями
+		for (var i = 0; i < particles.length; i++) {
+			var p2 = particles[i];
+			var dx = this.x - p2.x;
+			var dy = this.y - p2.y;
+			var dist = Math.sqrt(dx * dx + dy * dy);
+			
+			if (dist < 100) {
+				ctx.beginPath();
+				ctx.strokeStyle = this.color;
+				ctx.globalAlpha = 0.5 - dist / 100;
+				ctx.lineWidth = 0.5;
+				ctx.moveTo(this.x, this.y);
+				ctx.lineTo(p2.x, p2.y);
+				ctx.stroke();
+				ctx.globalAlpha = 1;
+			}
+		}
+	}
+
+	function onMouseMove(e) {
+		mouse.x = e.clientX;
+		mouse.y = e.clientY;
+	}
+
+	function onTouchMove(e) {
+		if (e.touches.length > 0) {
+			mouse.x = e.touches[0].clientX;
+			mouse.y = e.touches[0].clientY;
+		}
+	}
+
+	function onTouchEnd(e) {
+		mouse.x = -9999;
+		mouse.y = -9999;
+	}
+
+	function initScene() {
+		colors = getParticleColors();
+		ww = canvas.width = window.innerWidth;
+		wh = canvas.height = window.innerHeight;
+		
+		particles = [];
+		for (var i = 0; i < amount; i++) {
+			particles.push(new Particle());
+		}
+	}
+
+	function render() {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		for (var i = 0; i < amount; i++) {
+			particles[i].render();
+		}
+		requestAnimationFrame(render);
+	}
+
+	// Добавляем в глобальную область
+	window.initScene = initScene;
+
+	window.addEventListener("resize", initScene);
+	window.addEventListener("mousemove", onMouseMove);
+	window.addEventListener("touchmove", onTouchMove);
+	window.addEventListener("touchend", onTouchEnd);
+	
+	initScene();
+	requestAnimationFrame(render);
+</script>
+
+<style>
+	.about-container {
+		max-width: 800px;
+		margin: 120px auto 40px;
+		padding: 2rem;
+		background-color: rgba(var(--bg-color-rgb), 0.7);
+		backdrop-filter: blur(10px);
+		border-radius: 16px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+		color: var(--text-color);
+		position: relative;
+		z-index: 10;
+	}
+	
+	h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1.5rem;
+		text-align: center;
+		background: linear-gradient(90deg, #5da9e9, #f25757);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+	
+	.about-content {
+		font-size: 1.1rem;
+		line-height: 1.6;
+	}
+	
+	p {
+		margin-bottom: 1rem;
+	}
+	
+	ul {
+		margin-bottom: 1.5rem;
+		padding-left: 1.5rem;
+	}
+	
+	li {
+		margin-bottom: 0.5rem;
+	}
+	
+	@media (max-width: 768px) {
+		.about-container {
+			margin-top: 100px;
+			padding: 1.5rem;
+			width: 90%;
+		}
+		
+		h1 {
+			font-size: 2rem;
+		}
+		
+		.about-content {
+			font-size: 1rem;
+		}
+	}
+</style> 

@@ -1,0 +1,251 @@
+---
+import Logo from '../Logo.astro';
+import Button from '../Button.astro';
+import ModeToggle from '../ModeToggle.astro';
+
+export interface Props {
+  navItems: {
+    link: string;
+    title: string;
+    target?: string;
+  }[];
+}
+
+const { navItems } = Astro.props;
+---
+
+<div class="mobile-navbar" id="mobile-navbar">
+  <div class="navbar-background" id="mobile-navbar-bg"></div>
+  <div class="navbar-content">
+    <Logo />
+    <button id="mobile-menu-btn" class="menu-button" aria-label="Меню">
+      <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+      <svg id="close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- Мобильное меню (первоначально скрыто) -->
+<div id="mobile-menu" class="mobile-menu">
+  <div class="mobile-menu-header">
+    <Logo />
+    <div class="mobile-menu-actions">
+      <ModeToggle />
+      <button id="close-menu-btn" class="menu-button" aria-label="Закрыть меню">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-menu-items">
+    {navItems.map((item) => (
+      <a href={item.link} class="mobile-menu-item" target={item.target}>
+        <span>{item.title}</span>
+      </a>
+    ))}
+  </div>
+  <div class="mobile-menu-buttons">
+    <Button href="/signup">Регистрация</Button>
+    <Button variant="simple" href="/login">Войти</Button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileNavbar = document.getElementById('mobile-navbar');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const closeMenuBtn = document.getElementById('close-menu-btn');
+    const menuIcon = document.getElementById('menu-icon');
+    const closeIcon = document.getElementById('close-icon');
+    const menuItems = document.querySelectorAll('.mobile-menu-item');
+    
+    // Функция открытия мобильного меню
+    const openMenu = () => {
+      mobileMenu.classList.add('open');
+      document.body.style.overflow = 'hidden'; // Предотвращаем прокрутку страницы
+      menuIcon.style.display = 'none';
+      closeIcon.style.display = 'block';
+    };
+    
+    // Функция закрытия мобильного меню
+    const closeMenu = () => {
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = ''; // Возвращаем прокрутку
+      menuIcon.style.display = 'block';
+      closeIcon.style.display = 'none';
+    };
+    
+    // Обработчик для кнопки меню
+    menuBtn.addEventListener('click', () => {
+      if (mobileMenu.classList.contains('open')) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+    
+    // Обработчик для кнопки закрытия
+    closeMenuBtn.addEventListener('click', closeMenu);
+    
+    // Закрытие меню при клике на пункт меню
+    menuItems.forEach(item => {
+      item.addEventListener('click', closeMenu);
+    });
+    
+    // Изменение фона навбара при прокрутке
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        mobileNavbar.classList.add('with-background');
+      } else {
+        mobileNavbar.classList.remove('with-background');
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Инициализация состояния
+  });
+</script>
+
+<style>
+  .mobile-navbar {
+    width: 100%;
+    display: flex;
+    position: relative;
+    justify-content: space-between;
+    padding: 0.375rem 1rem;
+    border-radius: 9999px;
+    background-color: transparent;
+    transition: all 0.3s ease;
+  }
+  
+  .navbar-background {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 9999px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--bg-color-rgb), 0.8),
+      rgba(var(--bg-color-rgb), 0.4),
+      rgba(var(--bg-color-rgb), 0.8)
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .mobile-navbar.with-background {
+    box-shadow: 
+      0px -2px 0px 0px rgba(var(--text-color-rgb), 0.1),
+      0px 2px 0px 0px rgba(var(--text-color-rgb), 0.1);
+  }
+  
+  .mobile-navbar.with-background .navbar-background {
+    opacity: 1;
+  }
+  
+  .navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    z-index: 1;
+  }
+  
+  .menu-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+  }
+  
+  .menu-button:hover {
+    background-color: rgba(var(--text-color-rgb), 0.1);
+  }
+  
+  /* Мобильное меню */
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    background-color: var(--background-color);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+  }
+  
+  .mobile-menu.open {
+    transform: translateX(0);
+  }
+  
+  .mobile-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+  }
+  
+  .mobile-menu-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .mobile-menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .mobile-menu-item {
+    display: block;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 1.625rem;
+    font-weight: 500;
+    padding: 0.5rem 0;
+    transition: color 0.2s ease;
+  }
+  
+  .mobile-menu-item:hover {
+    color: var(--text-color-hover, var(--text-color));
+    opacity: 0.8;
+  }
+  
+  .mobile-menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: auto;
+  }
+  
+  @media (min-width: 769px) {
+    .mobile-navbar, .mobile-menu {
+      display: none;
+    }
+  }
+</style> 

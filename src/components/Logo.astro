@@ -1,0 +1,37 @@
+---
+// Logo.astro
+---
+
+<a href="/" class="logo-link" aria-label="Главная страница">
+  <div class="logo">
+    <span class="logo-text">ParticleText</span>
+  </div>
+</a>
+
+<style>
+  .logo-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    transition: transform 0.3s ease;
+  }
+  
+  .logo:hover {
+    transform: scale(1.05);
+  }
+  
+  .logo-text {
+    background: linear-gradient(90deg, #5da9e9, #f25757);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style> 

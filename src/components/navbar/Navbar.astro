@@ -1,0 +1,124 @@
+---
+import DesktopNavbar from './DesktopNavbar.astro';
+import MobileNavbar from './MobileNavbar.astro';
+
+// Определяем элементы навигации
+const navItems = [
+  {
+    title: "Главная",
+    link: "/",
+  },
+  {
+    title: "О проекте",
+    link: "/about",
+  },
+  {
+    title: "Блог",
+    link: "/blog",
+  },
+  {
+    title: "Контакты",
+    link: "/contact",
+  },
+];
+---
+
+<nav id="main-navbar" class="main-navbar initial-state">
+  <div class="desktop-wrapper">
+    <DesktopNavbar navItems={navItems} />
+  </div>
+  <div class="mobile-wrapper">
+    <MobileNavbar navItems={navItems} />
+  </div>
+</nav>
+
+<script>
+  // Анимация появления навбара после загрузки частиц
+  document.addEventListener('DOMContentLoaded', () => {
+    const navbar = document.getElementById('main-navbar');
+    
+    // Проверяем, была ли уже выполнена первичная анимация в текущей сессии
+    const isFirstLoad = sessionStorage.getItem('navbarAnimationDone') !== 'true';
+    
+    if (isFirstLoad && document.referrer === '') {
+      // Это первичная загрузка сайта или обновление страницы
+      
+      // Начальное положение навбара (скрыт)
+      navbar.classList.add('hidden');
+      navbar.style.transform = 'translateY(-80px)';
+      navbar.style.opacity = '0';
+      
+      // Последовательность анимаций:
+      // 1. Ждем некоторое время для эффекта
+      // 2. Показываем навбар
+      // 3. Плавно анимируем его появление
+      
+      // Даем время для анимации частиц
+      setTimeout(() => {
+        // Делаем навбар видимым
+        navbar.classList.remove('hidden');
+        
+        // Ждем небольшой момент перед началом анимации
+        setTimeout(() => {
+          navbar.style.transform = 'translateY(0)';
+          navbar.style.opacity = '1';
+          
+          // Запоминаем, что анимация была выполнена
+          sessionStorage.setItem('navbarAnimationDone', 'true');
+          
+          // Убираем класс начального состояния после завершения анимации
+          setTimeout(() => {
+            navbar.classList.remove('initial-state');
+          }, 800);
+        }, 50);
+      }, 1800); // 1.8 секунды для инициализации частиц
+    } else {
+      // Это переход между страницами - навбар сразу видимый
+      navbar.classList.remove('initial-state');
+      navbar.classList.remove('hidden');
+      navbar.style.transform = 'translateY(0)';
+      navbar.style.opacity = '1';
+    }
+  });
+</script>
+
+<style>
+  .main-navbar {
+    max-width: 1280px;
+    position: fixed;
+    top: 1rem;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    z-index: 50;
+    width: 95%;
+  }
+  
+  .initial-state {
+    transition: transform 0.8s cubic-bezier(0.6, 0.05, 0.1, 0.9), opacity 0.6s ease;
+  }
+  
+  .hidden {
+    visibility: hidden;
+  }
+  
+  .desktop-wrapper {
+    display: none;
+  }
+  
+  .mobile-wrapper {
+    display: block;
+    width: 100%;
+  }
+  
+  @media (min-width: 769px) {
+    .desktop-wrapper {
+      display: block;
+      width: 100%;
+    }
+    
+    .mobile-wrapper {
+      display: none;
+    }
+  }
+</style> 

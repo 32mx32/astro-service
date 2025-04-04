@@ -1,0 +1,117 @@
+---
+// Получаем активную страницу для подсветки в меню
+const { activeLink = '/' } = Astro.props;
+
+// Пункты навигации
+const navItems = [
+  { href: '/', text: 'Главная' },
+  { href: '/about', text: 'О проекте' },
+  { href: '/blog', text: 'Блог' },
+  { href: '/contact', text: 'Контакты' }
+];
+---
+
+<header class="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm">
+  <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <!-- Логотип -->
+    <a href="/" class="text-xl font-bold text-primary-600 dark:text-primary-400 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+        <line x1="9" y1="9" x2="9.01" y2="9"></line>
+        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+      </svg>
+      <span>AstroСайт</span>
+    </a>
+    
+    <!-- Навигация для мобильной версии -->
+    <div class="block lg:hidden">
+      <button id="mobile-menu-button" aria-label="Меню" class="text-gray-700 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Десктопная навигация -->
+    <nav class="hidden lg:flex items-center space-x-8">
+      {navItems.map(item => (
+        <a 
+          href={item.href} 
+          class={`text-sm font-medium transition-colors hover:text-primary-500 dark:hover:text-primary-400 ${
+            activeLink === item.href 
+              ? 'text-primary-600 dark:text-primary-400' 
+              : 'text-gray-700 dark:text-gray-300'
+          }`}
+        >
+          {item.text}
+        </a>
+      ))}
+      
+      <!-- Кнопка переключения темы -->
+      <button id="theme-toggle" aria-label="Переключить тему" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800">
+        <!-- Иконка солнца для темной темы -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <!-- Иконка луны для светлой темы -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 block dark:hidden text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </nav>
+  </div>
+  
+  <!-- Мобильное меню -->
+  <div id="mobile-menu" class="hidden px-4 py-3 lg:hidden bg-gray-50 dark:bg-gray-800">
+    <nav class="flex flex-col space-y-3">
+      {navItems.map(item => (
+        <a 
+          href={item.href} 
+          class={`text-sm font-medium transition-colors hover:text-primary-500 dark:hover:text-primary-400 ${
+            activeLink === item.href 
+              ? 'text-primary-600 dark:text-primary-400' 
+              : 'text-gray-700 dark:text-gray-300'
+          }`}
+        >
+          {item.text}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<script>
+  // Код для переключения темы
+  document.addEventListener('DOMContentLoaded', () => {
+    // Переключение темы
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    // Проверка сохраненной темы или системных настроек
+    if (localStorage.getItem('theme') === 'dark' || 
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    // Обработчик нажатия на кнопку смены темы
+    themeToggle?.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      
+      if (document.documentElement.classList.contains('dark')) {
+        localStorage.setItem('theme', 'dark');
+      } else {
+        localStorage.setItem('theme', 'light');
+      }
+    });
+    
+    // Обработчик для мобильного меню
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuButton?.addEventListener('click', () => {
+      mobileMenu?.classList.toggle('hidden');
+    });
+  });
+</script> 

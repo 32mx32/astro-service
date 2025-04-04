@@ -1,0 +1,48 @@
+---
+export interface Props {
+  href: string;
+  active?: boolean;
+  target?: string;
+}
+
+const { href, active = false, target } = Astro.props;
+const pathname = Astro.url.pathname;
+const isActive = active || pathname === href || pathname.startsWith(`${href}/`);
+---
+
+<a 
+  href={href} 
+  target={target}
+  class:list={[
+    'navbar-item', 
+    { active: isActive }
+  ]}
+>
+  <slot />
+</a>
+
+<style>
+  .navbar-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+  }
+  
+  .navbar-item:hover {
+    background-color: rgba(var(--text-color-rgb), 0.1);
+    opacity: 1;
+  }
+  
+  .navbar-item.active {
+    background-color: rgba(var(--text-color-rgb), 0.15);
+    font-weight: 500;
+    opacity: 1;
+  }
+</style> 

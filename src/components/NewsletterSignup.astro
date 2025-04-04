@@ -1,0 +1,47 @@
+---
+// Параметры компонента
+interface Props {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+}
+
+const {
+  title = "Подписаться на новости",
+  description = "Получайте последние обновления проекта, новые статьи и полезные советы по разработке прямо на вашу почту.",
+  buttonText = "Подписаться"
+} = Astro.props;
+---
+
+<section class="py-16 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900">
+  <div class="container mx-auto px-4">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">{title}</h2>
+      <p class="text-lg text-gray-700 dark:text-gray-300 mb-8">{description}</p>
+      
+      <form class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+        <div class="flex-1">
+          <label for="email" class="sr-only">Email адрес</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Ваш email адрес"
+            required
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+          />
+        </div>
+        <button
+          type="submit"
+          class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-300 shadow-sm hover:shadow"
+        >
+          {buttonText}
+        </button>
+      </form>
+
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-4">
+        Мы уважаем вашу приватность. Вы можете отписаться в любой момент.
+      </p>
+    </div>
+  </div>
+</section> 
