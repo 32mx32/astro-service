@@ -1,6 +1,8 @@
 ---
 // Импортируем глобальные стили Tailwind
 import '../styles/global.css';
+// Импортируем настройки темы
+import '../styles/theme.css';
 
 interface Props {
 	title?: string;
@@ -48,8 +50,25 @@ const { title = "Astro Современный Проект" } = Astro.props;
 				font-family: sans-serif;
 			}
 		</style>
+		
+		<!-- Скрипт для сохранения темы между страницами и предотвращения мигания -->
+		<script is:inline>
+			// Функция для применения темы без мигания при загрузке страницы
+			(function() {
+				// Проверяем тему из localStorage
+				const savedTheme = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				
+				// Применяем тему сразу в <html> до отрисовки страницы
+				if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+			})();
+		</script>
 	</head>
-	<body class="min-h-screen bg-gray-900 dark:bg-black text-gray-800 dark:text-gray-200">
+	<body>
 		<!-- Контейнер для частиц -->
 		<div id="tsparticles"></div>
 		
@@ -72,7 +91,16 @@ const { title = "Astro Современный Проект" } = Astro.props;
 				
 				// Определяем текущую тему
 				const isDarkMode = document.documentElement.classList.contains('dark');
-				const particleColor = isDarkMode ? "#ffffff" : "#ffffff";
+				
+				// Получаем цвета частиц из CSS переменных
+				const getParticleColors = () => {
+					const colorsString = getComputedStyle(document.documentElement)
+						.getPropertyValue('--particle-colors')
+						.trim();
+					return colorsString.split(',').map(color => color.trim());
+				};
+				
+				const particleColors = getParticleColors();
 				
 				// Инициализируем tsParticles
 				tsParticles.load("tsparticles", {
@@ -80,7 +108,7 @@ const { title = "Astro Современный Проект" } = Astro.props;
 						enable: false
 					},
 					background: {
-						color: "#000"
+						color: "transparent" // Убираем явный цвет фона
 					},
 					particles: {
 						number: {
@@ -91,7 +119,7 @@ const { title = "Astro Современный Проект" } = Astro.props;
 							}
 						},
 						color: {
-							value: particleColor
+							value: particleColors
 						},
 						shape: {
 							type: "circle"
@@ -212,7 +240,7 @@ const { title = "Astro Современный Проект" } = Astro.props;
 						if (!container) return;
 						
 						if (isExploded) {
-							// Собираем частицы обратно в текст
+							// Собираем ч��стицы обратно в текст
 							container.options.polygon.enable = true;
 							container.options.particles.move.speed = 10;
 							container.options.particles.move.direction = "none";
@@ -229,9 +257,6 @@ const { title = "Astro Современный Проект" } = Astro.props;
 						
 						isExploded = !isExploded;
 						container.refresh();
-						
-						// Не создаем автоматический цикл анимации
-						// setTimeout(toggleExplode, 5000);
 					};
 					
 					// Запуск анимации через 2 секунды после загрузки
@@ -240,21 +265,30 @@ const { title = "Astro Современный Проект" } = Astro.props;
 					// Добавляем функцию в глобальную область видимости для управления анимацией
 					window.toggleAnimation = toggleExplode;
 					
-					// Добавляем прослушиватель для изменения темы
-					const themeToggle = document.getElementById('theme-toggle');
-					if (themeToggle) {
-						themeToggle.addEventListener('click', function() {
-							const isDark = document.documentElement.classList.contains('dark');
-							const newColor = isDark ? "#ffffff" : "#ffffff";
-							
-							// Получаем контейнер и обновляем его настройки
-							const container = tsParticles.domItem(0);
-							if (container) {
-								container.options.particles.color.value = newColor;
-								container.refresh();
+					// Обновление цветов частиц при изменении темы
+					const updateParticleColors = () => {
+						const container = tsParticles.domItem(0);
+						if (container) {
+							const newColors = getParticleColors();
+							container.options.particles.color.value = newColors;
+							container.refresh();
+						}
+					};
+					
+					// Наблюдатель за изменениями класса dark у html элемента
+					const observer = new MutationObserver((mutations) => {
+						mutations.forEach((mutation) => {
+							if (mutation.attributeName === 'class') {
+								updateParticleColors();
 							}
 						});
-					}
+					});
+					
+					// Начинаем наблюдение за изменениями атрибута class у html
+					observer.observe(document.documentElement, { attributes: true });
+					
+					// Также обрабатываем событие смены темы для совместимости
+					document.addEventListener('themeChanged', updateParticleColors);
 				})
 				.catch(error => {
 					console.error("Ошибка при инициализации tsParticles:", error);
