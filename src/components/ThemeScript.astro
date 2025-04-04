@@ -1,0 +1,22 @@
+---
+// Компонент, который добавляет инлайн-скрипт в <head> для предотвращения мигания темы
+---
+
+<script is:inline>
+  // Немедленно выполняемая функция для применения темы до отрисовки страницы
+  (function() {
+    // Добавляем класс js-loading для скрытия контента до загрузки
+    document.documentElement.classList.add('js-loading');
+    
+    // Проверяем тему из localStorage
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Применяем тему сразу в <html> до отрисовки страницы
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  })();
+</script>
