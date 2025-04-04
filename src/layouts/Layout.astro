@@ -3,6 +3,8 @@
 import '../styles/global.css';
 // Импортируем настройки темы
 import '../styles/theme.css';
+// Импортируем ThemeScript для предотвращения мигания темы
+import ThemeScript from '../components/ThemeScript.astro';
 
 interface Props {
 	title?: string;
@@ -22,6 +24,9 @@ const { title = "Astro Современный Проект" } = Astro.props;
 		
 		<!-- Подключение полной версии tsParticles -->
 		<script is:inline src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+		
+		<!-- Добавляем ThemeScript для предотвращения мигания темы -->
+		<ThemeScript />
 		
 		<style>
 			/* Стили для контейнера частиц */
@@ -50,23 +55,6 @@ const { title = "Astro Современный Проект" } = Astro.props;
 				font-family: sans-serif;
 			}
 		</style>
-		
-		<!-- Скрипт для сохранения темы между страницами и предотвращения мигания -->
-		<script is:inline>
-			// Функция для применения темы без мигания при загрузке страницы
-			(function() {
-				// Проверяем тему из localStorage
-				const savedTheme = localStorage.getItem('theme');
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				
-				// Применяем тему сразу в <html> до отрисовки страницы
-				if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-					document.documentElement.classList.add('dark');
-				} else {
-					document.documentElement.classList.remove('dark');
-				}
-			})();
-		</script>
 	</head>
 	<body>
 		<!-- Контейнер для частиц -->
@@ -84,13 +72,13 @@ const { title = "Astro Современный Проект" } = Astro.props;
 		<script is:inline>
 			// Дожидаемся полной загрузки страницы
 			window.addEventListener('load', function() {
+				// Удаляем класс js-loading, чтобы показать контент
+				document.documentElement.classList.remove('js-loading');
+				
 				if (typeof tsParticles === 'undefined') {
 					console.error('tsParticles не загружен');
 					return;
 				}
-				
-				// Определяем текущую тему
-				const isDarkMode = document.documentElement.classList.contains('dark');
 				
 				// Получаем цвета частиц из CSS переменных
 				const getParticleColors = () => {
@@ -240,7 +228,7 @@ const { title = "Astro Современный Проект" } = Astro.props;
 						if (!container) return;
 						
 						if (isExploded) {
-							// Собираем ч��стицы обратно в текст
+							// Собираем частицы обратно в текст
 							container.options.polygon.enable = true;
 							container.options.particles.move.speed = 10;
 							container.options.particles.move.direction = "none";
@@ -295,7 +283,16 @@ const { title = "Astro Современный Проект" } = Astro.props;
 				});
 			});
 		</script>
+		
+		<!-- Скрипт для плавного перехода между страницами -->
+		<script>
+			// Показываем контент после загрузки страницы
+			document.addEventListener('DOMContentLoaded', () => {
+				setTimeout(() => {
+					// Удаляем класс js-loading, чтобы показать контент с плавной анимацией
+					document.documentElement.classList.remove('js-loading');
+				}, 100);
+			});
+		</script>
 	</body>
 </html>
-
-<!-- Удаляем стандартные стили, так как будем использовать Tailwind -->
