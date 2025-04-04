@@ -1,0 +1,135 @@
+---
+// ThemeProvider.astro - аналог context/theme-provider.tsx из Next.js
+// Компонент оборачивает страницы и управляет темой приложения
+interface Props {
+  defaultTheme?: 'light' | 'dark' | 'system';
+  attribute?: 'class' | 'data-theme';
+  enableSystem?: boolean;
+  storageKey?: string;
+}
+
+const {
+  defaultTheme = 'system',
+  attribute = 'class',
+  enableSystem = true,
+  storageKey = 'theme'
+} = Astro.props;
+---
+
+<div id="theme-provider" data-default-theme={defaultTheme} data-attribute={attribute} data-storage-key={storageKey} data-enable-system={enableSystem.toString()}>
+  <slot />
+</div>
+
+<script>
+  // Аналог функциональности next-themes
+  class ThemeManager {
+    container: HTMLElement;
+    storageKey: string;
+    attribute: string;
+    defaultTheme: string;
+    enableSystem: boolean;
+    
+    constructor() {
+      this.container = document.getElementById('theme-provider') as HTMLElement;
+      this.storageKey = this.container.dataset.storageKey || 'theme';
+      this.attribute = this.container.dataset.attribute || 'class';
+      this.defaultTheme = this.container.dataset.defaultTheme || 'system';
+      this.enableSystem = this.container.dataset.enableSystem === 'true';
+      
+      this.init();
+    }
+    
+    init() {
+      // Определяем тему при загрузке
+      const savedTheme = localStorage.getItem(this.storageKey);
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      let themeToApply = this.defaultTheme;
+      
+      if (savedTheme) {
+        themeToApply = savedTheme;
+      } else if (this.enableSystem && prefersDark) {
+        themeToApply = 'dark';
+      }
+      
+      this.setTheme(themeToApply);
+      
+      // Обработчик изменения системной темы
+      if (this.enableSystem) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem(this.storageKey)) {
+            this.setTheme(e.matches ? 'dark' : 'light');
+          }
+        });
+      }
+      
+      // Открываем API для использования в других компонентах
+      window.themeManager = {
+        getTheme: () => this.getTheme(),
+        setTheme: (theme: string) => this.setTheme(theme),
+        toggle: () => this.toggle()
+      };
+      
+      // Публикуем событие готовности менеджера темы
+      document.dispatchEvent(new CustomEvent('themeManagerReady'));
+    }
+    
+    setTheme(theme: string) {
+      // Применяем тему к документу
+      if (theme === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.classList.toggle('dark', systemTheme === 'dark');
+      } else {
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      }
+      
+      // Сохраняем тему
+      if (theme !== this.defaultTheme) {
+        localStorage.setItem(this.storageKey, theme);
+      } else {
+        localStorage.removeItem(this.storageKey);
+      }
+      
+      // Оповещаем о смене темы
+      document.dispatchEvent(new CustomEvent('themeChanged', {
+        detail: { theme }
+      }));
+    }
+    
+    getTheme() {
+      const savedTheme = localStorage.getItem(this.storageKey);
+      if (savedTheme) return savedTheme;
+      
+      if (this.enableSystem) {
+        return 'system';
+      }
+      
+      return this.defaultTheme;
+    }
+    
+    toggle() {
+      const current = this.getTheme();
+      if (current === 'dark' || (current === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        this.setTheme('light');
+      } else {
+        this.setTheme('dark');
+      }
+    }
+  }
+  
+  // Объявляем типы для глобального объекта window
+  declare global {
+    interface Window {
+      themeManager: {
+        getTheme: () => string;
+        setTheme: (theme: string) => void;
+        toggle: () => void;
+      };
+    }
+  }
+  
+  // Инициализируем менеджер темы после загрузки DOM
+  document.addEventListener('DOMContentLoaded', () => {
+    new ThemeManager();
+  });
+</script>

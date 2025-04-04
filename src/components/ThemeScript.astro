@@ -1,22 +1,46 @@
 ---
-// Компонент, который добавляет инлайн-скрипт в <head> для предотвращения мигания темы
+// Компонент, предотвращающий мигание темы при загрузке страницы
 ---
 
 <script is:inline>
-  // Немедленно выполняемая функция для применения темы до отрисовки страницы
+  // Немедленно выполняемая функция (IIFE) - запускается до отрисовки страницы
   (function() {
-    // Добавляем класс js-loading для скрытия контента до загрузки
-    document.documentElement.classList.add('js-loading');
-    
-    // Проверяем тему из localStorage
+    // Получаем сохраненную тему из localStorage
     const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    // Применяем тему сразу в <html> до отрисовки страницы
+    // Определяем предпочтения системы
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Скрываем страницу до применения темы для предотвращения мигания
+    document.documentElement.style.visibility = 'hidden';
+    
+    // Применяем тему до отрисовки страницы
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
       document.documentElement.classList.add('dark');
-    } else {
+    } else if (savedTheme === 'light') {
       document.documentElement.classList.remove('dark');
     }
+    
+    // Добавляем стиль для быстрого показа страницы после загрузки
+    const style = document.createElement('style');
+    style.innerHTML = `
+      /* Изначально скрываем, затем показываем при полной загрузке */
+      html {
+        visibility: hidden;
+      }
+      html.loaded {
+        visibility: visible;
+        transition: background-color 0.5s ease;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Делаем страницу видимой сразу после запуска скрипта
+    document.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.add('loaded');
+        document.documentElement.style.visibility = 'visible';
+      });
+    });
   })();
 </script>

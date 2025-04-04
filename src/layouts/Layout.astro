@@ -1,10 +1,13 @@
 ---
 // Импортируем глобальные стили Tailwind
 import '../styles/global.css';
-// Импортируем настройки темы
+// Импортируем настройки тем
 import '../styles/theme.css';
-// Импортируем ThemeScript для предотвращения мигания темы
+// Импортируем компонент для предотвращения мигания темы
 import ThemeScript from '../components/ThemeScript.astro';
+// Импортируем ThemeProvider для управления темой
+import ThemeProvider from '../context/ThemeProvider.astro';
+import Navbar from '../components/navbar/Navbar.astro';
 
 interface Props {
 	title?: string;
@@ -22,276 +25,89 @@ const { title = "Astro Современный Проект" } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		
-		<!-- Подключение полной версии tsParticles -->
-		<script is:inline src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-		
-		<!-- Добавляем ThemeScript для предотвращения мигания темы -->
+		<!-- Подключаем ThemeScript перед любыми другими скриптами и стилями -->
 		<ThemeScript />
 		
 		<style>
-			/* Стили для контейнера частиц */
-			#tsparticles {
-				position: fixed;
-				width: 100%;
-				height: 100%;
-				top: 0;
-				left: 0;
-				z-index: 10;
+			/* Стили вынесены в theme.css, оставляем только специфичные */
+			body {
+				margin: 0;
+				overflow: hidden;
+				font-size: 16px;
+				font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+				background-color: var(--background-color);
+				color: var(--text-color);
 			}
 			
-			/* Стили для основного контента, чтобы он был поверх анимации */
+			canvas {
+				background: var(--background-color);
+				width: 100vw;
+				height: 100vh;
+			}
+			
+			/* Стиль для плавного появления контента */
 			.content-wrapper {
-				position: relative;
-				z-index: 20;
+				opacity: 0;
+				animation: fadeIn 0.5s ease forwards;
+				animation-delay: 0.1s;
 			}
 			
-			/* Скрытый текст для создания формы */
-			.particles-text {
-				position: absolute;
-				top: -9999px;
-				left: -9999px;
-				font-size: 80px;
-				font-weight: 700;
-				font-family: sans-serif;
+			@keyframes fadeIn {
+				from { opacity: 0; }
+				to { opacity: 1; }
 			}
 		</style>
 	</head>
 	<body>
-		<!-- Контейнер для частиц -->
-		<div id="tsparticles"></div>
+		<!-- Оборачиваем весь контент в ThemeProvider -->
+		<ThemeProvider defaultTheme="system" enableSystem={true}>
+			<div class="content-wrapper">
+				<Navbar />
+				<slot />
+			</div>
+		</ThemeProvider>
 		
-		<!-- Скрытый текст для формирования частиц -->
-		<div class="particles-text" id="particles-text">CODEPEN</div>
-		
-		<!-- Обертка для основного контента -->
-		<div class="content-wrapper">
-			<slot />
-		</div>
-		
-		<!-- Инициализация tsParticles -->
-		<script is:inline>
-			// Дожидаемся полной загрузки страницы
-			window.addEventListener('load', function() {
-				// Удаляем класс js-loading, чтобы показать контент
-				document.documentElement.classList.remove('js-loading');
+		<script>
+			// Оптимизированный скрипт управления темой
+			document.addEventListener('DOMContentLoaded', () => {
+				const themeToggle = document.getElementById('theme-toggle');
 				
-				if (typeof tsParticles === 'undefined') {
-					console.error('tsParticles не загружен');
-					return;
+				// Функция для обновления значков
+				function updateToggleIcons() {
+					const sunIcon = document.querySelector('.sun-icon');
+					const moonIcon = document.querySelector('.moon-icon');
+					
+					if (sunIcon && moonIcon) {
+						const isDark = document.documentElement.classList.contains('dark');
+						// Используем прозрачность вместо display для плавного перехода
+						sunIcon.style.opacity = isDark ? '0' : '1';
+						moonIcon.style.opacity = isDark ? '1' : '0';
+					}
 				}
 				
-				// Получаем цвета частиц из CSS переменных
-				const getParticleColors = () => {
-					const colorsString = getComputedStyle(document.documentElement)
-						.getPropertyValue('--particle-colors')
-						.trim();
-					return colorsString.split(',').map(color => color.trim());
-				};
-				
-				const particleColors = getParticleColors();
-				
-				// Инициализируем tsParticles
-				tsParticles.load("tsparticles", {
-					fullScreen: {
-						enable: false
-					},
-					background: {
-						color: "transparent" // Убираем явный цвет фона
-					},
-					particles: {
-						number: {
-							value: 1000,
-							density: {
-								enable: true,
-								value_area: 800
-							}
-						},
-						color: {
-							value: particleColors
-						},
-						shape: {
-							type: "circle"
-						},
-						opacity: {
-							value: 1,
-							random: false,
-							anim: {
-								enable: true,
-								speed: 1,
-								opacity_min: 0.4,
-								sync: false
-							}
-						},
-						size: {
-							value: 3,
-							random: true,
-							anim: {
-								enable: false,
-								speed: 3,
-								size_min: 0.5,
-								sync: false
-							}
-						},
-						line_linked: {
-							enable: false
-						},
-						move: {
-							enable: true,
-							speed: 3,
-							direction: "none",
-							random: true,
-							straight: false,
-							out_mode: "out",
-							bounce: false,
-							attract: {
-								enable: false,
-								rotateX: 600,
-								rotateY: 1200
-							}
+				// Обработчик переключения темы
+				if (themeToggle) {
+					themeToggle.addEventListener('click', () => {
+						// Используем API ThemeManager
+						if (window.themeManager) {
+							window.themeManager.toggle();
+							updateToggleIcons();
 						}
-					},
-					interactivity: {
-						detect_on: "canvas",
-						events: {
-							onhover: {
-								enable: true,
-								mode: "bubble"
-							},
-							onclick: {
-								enable: true,
-								mode: "repulse"
-							},
-							resize: true
-						},
-						modes: {
-							grab: {
-								distance: 400,
-								line_linked: {
-									opacity: 1
-								}
-							},
-							bubble: {
-								distance: 250,
-								size: 0,
-								duration: 2,
-								opacity: 0,
-								speed: 3
-							},
-							repulse: {
-								distance: 400,
-								duration: 0.4
-							},
-							push: {
-								particles_nb: 4
-							},
-							remove: {
-								particles_nb: 2
-							}
-						}
-					},
-					retina_detect: true,
-					// Настройки для формирования текста
-					emitters: [],
-					absorbers: [],
-					infections: [],
-					polygon: {
-						enable: true,
-						type: "inline",
-						inline: {
-							arrangement: "one-per-point"
-						},
-						draw: {
-							enable: true,
-							stroke: {
-								width: 1,
-								color: "rgba(255,255,255,0.2)"
-							}
-						},
-						move: {
-							radius: 10,
-							type: "path"
-						},
-						url: "",
-						// Использование скрытого текста для формы
-						element: document.getElementById("particles-text")
-					}
-				})
-				.then((container) => {
-					console.log("tsParticles успешно инициализирован");
-					
-					// Анимация разлета и сбора частиц
-					let isExploded = false;
-					
-					// Функция для эффекта взрыва и сбора
-					const toggleExplode = () => {
-						const container = tsParticles.domItem(0);
-						if (!container) return;
-						
-						if (isExploded) {
-							// Собираем частицы обратно в текст
-							container.options.polygon.enable = true;
-							container.options.particles.move.speed = 10;
-							container.options.particles.move.direction = "none";
-							container.options.particles.move.straight = false;
-							container.options.particles.move.random = true;
-						} else {
-							// Разлетаются от текста
-							container.options.polygon.enable = false;
-							container.options.particles.move.speed = 15;
-							container.options.particles.move.direction = "outside";
-							container.options.particles.move.straight = true;
-							container.options.particles.move.random = false;
-						}
-						
-						isExploded = !isExploded;
-						container.refresh();
-					};
-					
-					// Запуск анимации через 2 секунды после загрузки
-					setTimeout(toggleExplode, 2000);
-					
-					// Добавляем функцию в глобальную область видимости для управления анимацией
-					window.toggleAnimation = toggleExplode;
-					
-					// Обновление цветов частиц при изменении темы
-					const updateParticleColors = () => {
-						const container = tsParticles.domItem(0);
-						if (container) {
-							const newColors = getParticleColors();
-							container.options.particles.color.value = newColors;
-							container.refresh();
-						}
-					};
-					
-					// Наблюдатель за изменениями класса dark у html элемента
-					const observer = new MutationObserver((mutations) => {
-						mutations.forEach((mutation) => {
-							if (mutation.attributeName === 'class') {
-								updateParticleColors();
-							}
-						});
 					});
 					
-					// Начинаем наблюдение за изменениями атрибута class у html
-					observer.observe(document.documentElement, { attributes: true });
+					// Инициализация
+					updateToggleIcons();
 					
-					// Также обрабатываем событие смены темы для совместимости
-					document.addEventListener('themeChanged', updateParticleColors);
-				})
-				.catch(error => {
-					console.error("Ошибка при инициализации tsParticles:", error);
-				});
-			});
-		</script>
-		
-		<!-- Скрипт для плавного перехода между страницами -->
-		<script>
-			// Показываем контент после загрузки страницы
-			document.addEventListener('DOMContentLoaded', () => {
-				setTimeout(() => {
-					// Удаляем класс js-loading, чтобы показать контент с плавной анимацией
-					document.documentElement.classList.remove('js-loading');
-				}, 100);
+					// Прослушиваем событие изменения темы
+					document.addEventListener('themeChanged', () => {
+						updateToggleIcons();
+						
+						// Вызываем перерисовку анимации при изменении темы
+						if (window.initScene) {
+							window.initScene();
+						}
+					});
+				}
 			});
 		</script>
 	</body>

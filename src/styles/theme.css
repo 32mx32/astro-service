@@ -1,51 +1,61 @@
-/* Файл с настройками тем */
+/* Файл с настройками тем и плавными переходами */
 
+/* Базовые настройки темы */
 :root {
-  /* Базовая светлая тема */
-  --bg-color: 245, 245, 245;
-  --text-color: 30, 30, 30;
-  --text-color-rgb: 30, 30, 30;
-  --particle-colors: #0355F5, #0D99FF, #1ACFFF, #4E73FF;
-  --navbar-bg: rgba(255, 255, 255, 0.8);
-  --navbar-border: rgba(0, 0, 0, 0.1);
-  --button-bg: rgba(0, 0, 0, 0.05);
-  --button-hover: rgba(0, 0, 0, 0.1);
+  /* Светлая тема */
+  --background-color: #f8f9fa;
+  --text-color: #2d3748;
+  --text-color-rgb: 45, 55, 72;
+  --bg-color-rgb: 248, 249, 250;
+  --navbar-bg: rgba(248, 249, 250, 0.8);
+  --particle-colors: #4299e1,#3182ce,#f6ad55,#ed8936,#e53e3e;
+  --neutral-100: rgba(45, 55, 72, 0.1);
+  --neutral-800: rgba(45, 55, 72, 0.07);
+  --text-color-hover: #1a202c;
   
-  /* Плавная анимация переключения темы для всех элементов */
+  /* Настройки перехода между темами */
   --transition-speed: 0.5s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Применение темной темы */
+/* Темная тема */
 .dark {
-  --bg-color: 18, 18, 18;
-  --text-color: 235, 235, 235;
-  --text-color-rgb: 235, 235, 235;
-  --particle-colors: #BD34FE, #FF2976, #FFAD5D, #41EAD4;
-  --navbar-bg: rgba(30, 30, 30, 0.8);
-  --navbar-border: rgba(255, 255, 255, 0.1);
-  --button-bg: rgba(255, 255, 255, 0.1);
-  --button-hover: rgba(255, 255, 255, 0.15);
+  --background-color: #121212;
+  --text-color: #e2e2e2;
+  --text-color-rgb: 226, 226, 226;
+  --bg-color-rgb: 18, 18, 18;
+  --navbar-bg: rgba(18, 18, 18, 0.8);
+  --particle-colors: #f56565,#ed8936,#ecc94b,#9ae6b4,#63b3ed;
+  --neutral-100: rgba(255, 255, 255, 0.1);
+  --neutral-800: rgba(255, 255, 255, 0.05);
+  --text-color-hover: #ffffff;
 }
 
-/* Плавный переход для всего body */
-body {
-  background-color: rgb(var(--bg-color));
-  color: rgb(var(--text-color));
-  transition: background-color var(--transition-speed) ease, 
-              color var(--transition-speed) ease;
+/* Плавный переход для всех элементов при смене темы */
+body, canvas, div, nav, header, 
+input, button, a, p, h1, h2, h3, h4, h5, h6,
+span, section, main, article, aside, footer {
+  transition: color var(--transition-speed) var(--transition-timing),
+              background-color var(--transition-speed) var(--transition-timing),
+              border-color var(--transition-speed) var(--transition-timing),
+              box-shadow var(--transition-speed) var(--transition-timing);
 }
 
-/* Плавный переход для всех основных элементов */
-button, a, input, select, textarea, div, nav, header, footer {
-  transition: background-color var(--transition-speed) ease,
-              color var(--transition-speed) ease,
-              border-color var(--transition-speed) ease,
-              box-shadow var(--transition-speed) ease,
-              transform 0.3s ease,
-              opacity 0.3s ease;
+/* Улучшаем плавность отображения страницы */
+.content-fade-in {
+  animation: contentFadeIn 0.6s ease forwards;
 }
 
-/* Элементы, которые не должны анимироваться при переключении темы */
-.no-theme-transition {
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Исключения для элементов, которые не должны анимироваться */
+.no-transition {
   transition: none !important;
 }
