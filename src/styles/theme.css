@@ -1,0 +1,51 @@
+/* Файл с настройками тем */
+
+:root {
+  /* Базовая светлая тема */
+  --bg-color: 245, 245, 245;
+  --text-color: 30, 30, 30;
+  --text-color-rgb: 30, 30, 30;
+  --particle-colors: #0355F5, #0D99FF, #1ACFFF, #4E73FF;
+  --navbar-bg: rgba(255, 255, 255, 0.8);
+  --navbar-border: rgba(0, 0, 0, 0.1);
+  --button-bg: rgba(0, 0, 0, 0.05);
+  --button-hover: rgba(0, 0, 0, 0.1);
+  
+  /* Плавная анимация переключения темы для всех элементов */
+  --transition-speed: 0.5s;
+}
+
+/* Применение темной темы */
+.dark {
+  --bg-color: 18, 18, 18;
+  --text-color: 235, 235, 235;
+  --text-color-rgb: 235, 235, 235;
+  --particle-colors: #BD34FE, #FF2976, #FFAD5D, #41EAD4;
+  --navbar-bg: rgba(30, 30, 30, 0.8);
+  --navbar-border: rgba(255, 255, 255, 0.1);
+  --button-bg: rgba(255, 255, 255, 0.1);
+  --button-hover: rgba(255, 255, 255, 0.15);
+}
+
+/* Плавный переход для всего body */
+body {
+  background-color: rgb(var(--bg-color));
+  color: rgb(var(--text-color));
+  transition: background-color var(--transition-speed) ease, 
+              color var(--transition-speed) ease;
+}
+
+/* Плавный переход для всех основных элементов */
+button, a, input, select, textarea, div, nav, header, footer {
+  transition: background-color var(--transition-speed) ease,
+              color var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease,
+              transform 0.3s ease,
+              opacity 0.3s ease;
+}
+
+/* Элементы, которые не должны анимироваться при переключении темы */
+.no-theme-transition {
+  transition: none !important;
+}
