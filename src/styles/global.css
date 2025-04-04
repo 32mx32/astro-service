@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Дополнительные глобальные стили */
+/* Плавная смена темной/светлой темы */
+html {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: 300ms;
+}
+
 /* Базовые стили для всех тегов заголовков */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
@@ -20,31 +27,4 @@ h2 {
 h3 {
   font-size: 1.5rem;
   margin-bottom: 0.75rem;
-}
-
-/* Стили для предотвращения FOUC (Flash of Unstyled Content) */
-/* Скрываем контент до полной загрузки CSS и JS */
-html.js-loading .content-wrapper {
-  opacity: 0;
-}
-
-html:not(.js-loading) .content-wrapper {
-  opacity: 1;
-  transition: opacity 0.5s ease;
-}
-
-/* Плавное появление контента на странице */
-.fade-in {
-  animation: fadeIn 0.8s ease forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }

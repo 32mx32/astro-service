@@ -46,37 +46,39 @@ const posts = [
 ---
 
 <Layout title={title}>
-	<canvas id="scene"></canvas>
-	<div class="blog-container">
-		<h1>Блог</h1>
-		<div class="blog-intro">
-			<p>Добро пожаловать в наш блог о веб-разработке, анимациях и интерактивном дизайне.</p>
-		</div>
-		
-		<div class="posts-grid">
-			{posts.map(post => (
-				<article class="post-card">
-					<div class="post-image">
-						<img src={post.image} alt={post.title} />
-					</div>
-					<div class="post-content">
-						<h2>{post.title}</h2>
-						<div class="post-meta">
-							<span class="post-date">{post.date}</span>
-							<span class="post-author">Автор: {post.author}</span>
+	<main class="content-area">
+		<canvas id="scene"></canvas>
+		<div class="blog-container">
+			<h1>Блог</h1>
+			<div class="blog-intro">
+				<p>Добро пожаловать в наш блог о веб-разработке, анимациях и интерактивном дизайне.</p>
+			</div>
+			
+			<div class="posts-grid">
+				{posts.map(post => (
+					<article class="post-card">
+						<div class="post-image">
+							<img src={post.image} alt={post.title} />
 						</div>
-						<p>{post.summary}</p>
-						<div class="post-tags">
-							{post.tags.map(tag => (
-								<span class="tag">{tag}</span>
-							))}
+						<div class="post-content">
+							<h2>{post.title}</h2>
+							<div class="post-meta">
+								<span class="post-date">{post.date}</span>
+								<span class="post-author">Автор: {post.author}</span>
+							</div>
+							<p>{post.summary}</p>
+							<div class="post-tags">
+								{post.tags.map(tag => (
+									<span class="tag">{tag}</span>
+								))}
+							</div>
+							<a href={`/blog/${post.id}`} class="read-more">Читать далее</a>
 						</div>
-						<a href={`/blog/${post.id}`} class="read-more">Читать далее</a>
-					</div>
-				</article>
-			))}
+					</article>
+				))}
+			</div>
 		</div>
-	</div>
+	</main>
 </Layout>
 
 <script>

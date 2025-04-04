@@ -1,135 +1,134 @@
 ---
-// ThemeProvider.astro - аналог context/theme-provider.tsx из Next.js
-// Компонент оборачивает страницы и управляет темой приложения
 interface Props {
   defaultTheme?: 'light' | 'dark' | 'system';
-  attribute?: 'class' | 'data-theme';
   enableSystem?: boolean;
   storageKey?: string;
 }
 
 const {
   defaultTheme = 'system',
-  attribute = 'class',
   enableSystem = true,
-  storageKey = 'theme'
+  storageKey = 'theme',
 } = Astro.props;
 ---
 
-<div id="theme-provider" data-default-theme={defaultTheme} data-attribute={attribute} data-storage-key={storageKey} data-enable-system={enableSystem.toString()}>
+<div id="theme-provider" data-default-theme={defaultTheme} data-enable-system={enableSystem.toString()} data-storage-key={storageKey}>
   <slot />
 </div>
 
 <script>
-  // Аналог функциональности next-themes
-  class ThemeManager {
-    container: HTMLElement;
-    storageKey: string;
-    attribute: string;
+  // Эта часть выполняется только на клиенте
+  class ThemeProvider {
+    element: HTMLElement;
     defaultTheme: string;
     enableSystem: boolean;
+    storageKey: string;
     
     constructor() {
-      this.container = document.getElementById('theme-provider') as HTMLElement;
-      this.storageKey = this.container.dataset.storageKey || 'theme';
-      this.attribute = this.container.dataset.attribute || 'class';
-      this.defaultTheme = this.container.dataset.defaultTheme || 'system';
-      this.enableSystem = this.container.dataset.enableSystem === 'true';
+      this.element = document.getElementById('theme-provider') as HTMLElement;
       
-      this.init();
+      if (!this.element) {
+        console.error('Theme provider element not found');
+        return;
+      }
+      
+      this.defaultTheme = this.element.dataset.defaultTheme || 'system';
+      this.enableSystem = this.element.dataset.enableSystem === 'true';
+      this.storageKey = this.element.dataset.storageKey || 'theme';
+      
+      // Инициализация темы при загрузке страницы
+      this.initialize();
+      
+      // Слушаем изменения в системной теме, если это разрешено
+      if (this.enableSystem) {
+        this.listenForSystemChanges();
+      }
     }
     
-    init() {
-      // Определяем тему при загрузке
-      const savedTheme = localStorage.getItem(this.storageKey);
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    initialize() {
+      // Если глобальный API темы уже инициализирован из ThemeScript, пропускаем
+      if (window.themeManager) {
+        return;
+      }
       
-      let themeToApply = this.defaultTheme;
+      // Создаем новый themeManager
+      window.themeManager = {
+        getTheme: () => {
+          return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        },
+        setTheme: (theme: string) => {
+          if (theme === 'system') {
+            localStorage.removeItem(this.storageKey);
+            this.applySystemTheme();
+          } else {
+            localStorage.setItem(this.storageKey, theme);
+            this.applyTheme(theme);
+          }
+          
+          document.dispatchEvent(new CustomEvent('themeChanged', {
+            detail: { theme }
+          }));
+        },
+        toggle: () => {
+          const current = this.getCurrentTheme();
+          const newTheme = current === 'dark' ? 'light' : 'dark';
+          window.themeManager.setTheme(newTheme);
+          return newTheme;
+        }
+      };
+      
+      // Применяем начальную тему
+      this.applyInitialTheme();
+    }
+    
+    applyInitialTheme() {
+      // Проверяем сохраненную тему
+      const savedTheme = localStorage.getItem(this.storageKey);
       
       if (savedTheme) {
-        themeToApply = savedTheme;
-      } else if (this.enableSystem && prefersDark) {
-        themeToApply = 'dark';
+        this.applyTheme(savedTheme);
+      } else if (this.defaultTheme === 'system' && this.enableSystem) {
+        this.applySystemTheme();
+      } else {
+        this.applyTheme(this.defaultTheme);
       }
-      
-      this.setTheme(themeToApply);
+    }
+    
+    applyTheme(theme: string) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    
+    applySystemTheme() {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.applyTheme(isDark ? 'dark' : 'light');
+    }
+    
+    getCurrentTheme() {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    
+    listenForSystemChanges() {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
       // Обработчик изменения системной темы
-      if (this.enableSystem) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-          if (!localStorage.getItem(this.storageKey)) {
-            this.setTheme(e.matches ? 'dark' : 'light');
-          }
-        });
-      }
-      
-      // Открываем API для использования в других компонентах
-      window.themeManager = {
-        getTheme: () => this.getTheme(),
-        setTheme: (theme: string) => this.setTheme(theme),
-        toggle: () => this.toggle()
+      const handleChange = () => {
+        const savedTheme = localStorage.getItem(this.storageKey);
+        if (!savedTheme) {
+          this.applySystemTheme();
+        }
       };
       
-      // Публикуем событие готовности менеджера темы
-      document.dispatchEvent(new CustomEvent('themeManagerReady'));
-    }
-    
-    setTheme(theme: string) {
-      // Применяем тему к документу
-      if (theme === 'system') {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.classList.toggle('dark', systemTheme === 'dark');
-      } else {
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-      }
-      
-      // Сохраняем тему
-      if (theme !== this.defaultTheme) {
-        localStorage.setItem(this.storageKey, theme);
-      } else {
-        localStorage.removeItem(this.storageKey);
-      }
-      
-      // Оповещаем о смене темы
-      document.dispatchEvent(new CustomEvent('themeChanged', {
-        detail: { theme }
-      }));
-    }
-    
-    getTheme() {
-      const savedTheme = localStorage.getItem(this.storageKey);
-      if (savedTheme) return savedTheme;
-      
-      if (this.enableSystem) {
-        return 'system';
-      }
-      
-      return this.defaultTheme;
-    }
-    
-    toggle() {
-      const current = this.getTheme();
-      if (current === 'dark' || (current === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        this.setTheme('light');
-      } else {
-        this.setTheme('dark');
-      }
+      // Современный способ слушать изменения
+      mediaQuery.addEventListener('change', handleChange);
     }
   }
   
-  // Объявляем типы для глобального объекта window
-  declare global {
-    interface Window {
-      themeManager: {
-        getTheme: () => string;
-        setTheme: (theme: string) => void;
-        toggle: () => void;
-      };
-    }
-  }
-  
-  // Инициализируем менеджер темы после загрузки DOM
+  // Инициализируем ThemeProvider после загрузки DOM
   document.addEventListener('DOMContentLoaded', () => {
-    new ThemeManager();
+    new ThemeProvider();
   });
-</script>
+</script> 

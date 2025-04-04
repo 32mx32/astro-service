@@ -7,7 +7,11 @@ export interface Props {
 
 const { href, active = false, target } = Astro.props;
 const pathname = Astro.url.pathname;
-const isActive = active || pathname === href || pathname.startsWith(`${href}/`);
+// Проверка на активную ссылку с учетом корневого пути
+const isActive = active || 
+  pathname === href || 
+  (href !== '/' && pathname.startsWith(`${href}/`)) ||
+  (href === '/' && pathname === '/');
 ---
 
 <a 
@@ -17,9 +21,41 @@ const isActive = active || pathname === href || pathname.startsWith(`${href}/`);
     'navbar-item', 
     { active: isActive }
   ]}
+  data-nav-link={href}
 >
   <slot />
 </a>
+
+<script>
+  // Обновление активных ссылок при клиентской навигации
+  function updateActiveLinks() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('[data-nav-link]');
+    
+    navLinks.forEach(link => {
+      const linkPath = link.getAttribute('data-nav-link');
+      const isRoot = linkPath === '/';
+      
+      // Логика определения активной ссылки
+      const isActive = 
+        currentPath === linkPath || 
+        (!isRoot && currentPath.startsWith(`${linkPath}/`)) ||
+        (isRoot && currentPath === '/');
+      
+      if (isActive) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+  
+  // Обновляем ссылки при загрузке страницы
+  document.addEventListener('DOMContentLoaded', updateActiveLinks);
+  
+  // Обновляем ссылки после завершения клиентской навигации
+  document.addEventListener('clientNavigationComplete', updateActiveLinks);
+</script>
 
 <style>
   .navbar-item {
@@ -33,6 +69,7 @@ const isActive = active || pathname === href || pathname.startsWith(`${href}/`);
     text-decoration: none;
     transition: all 0.2s ease;
     opacity: 0.8;
+    position: relative;
   }
   
   .navbar-item:hover {
@@ -44,5 +81,19 @@ const isActive = active || pathname === href || pathname.startsWith(`${href}/`);
     background-color: rgba(var(--text-color-rgb), 0.15);
     font-weight: 500;
     opacity: 1;
+  }
+  
+  /* Добавляем индикатор активной ссылки */
+  .navbar-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1.5rem;
+    height: 3px;
+    border-radius: 1.5px;
+    background: linear-gradient(to right, var(--particle-colors));
+    opacity: 0.8;
   }
 </style> 

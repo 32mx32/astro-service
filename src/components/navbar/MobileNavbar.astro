@@ -1,7 +1,7 @@
 ---
 import Logo from '../Logo.astro';
 import Button from '../Button.astro';
-import ModeToggle from '../ModeToggle.astro';
+import ModeToggle from '../ModeToggle.jsx';
 
 export interface Props {
   navItems: {
@@ -37,7 +37,7 @@ const { navItems } = Astro.props;
   <div class="mobile-menu-header">
     <Logo />
     <div class="mobile-menu-actions">
-      <ModeToggle />
+      <ModeToggle client:load />
       <button id="close-menu-btn" class="menu-button" aria-label="Закрыть меню">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -47,11 +47,24 @@ const { navItems } = Astro.props;
     </div>
   </div>
   <div class="mobile-menu-items">
-    {navItems.map((item) => (
-      <a href={item.link} class="mobile-menu-item" target={item.target}>
-        <span>{item.title}</span>
-      </a>
-    ))}
+    {navItems.map((item) => {
+      const pathname = Astro.url.pathname;
+      const isActive = 
+        pathname === item.link || 
+        (item.link !== '/' && pathname.startsWith(`${item.link}/`)) || 
+        (item.link === '/' && pathname === '/');
+      
+      return (
+        <a 
+          href={item.link} 
+          class:list={["mobile-menu-item", { active: isActive }]}
+          target={item.target}
+          data-nav-link={item.link}
+        >
+          <span>{item.title}</span>
+        </a>
+      );
+    })}
   </div>
   <div class="mobile-menu-buttons">
     <Button href="/signup">Регистрация</Button>
@@ -113,6 +126,41 @@ const { navItems } = Astro.props;
     
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Инициализация состояния
+    
+    // Обновление активных ссылок
+    function updateActiveLinks() {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('[data-nav-link]');
+      
+      navLinks.forEach(link => {
+        const linkPath = link.getAttribute('data-nav-link');
+        const isRoot = linkPath === '/';
+        
+        // Логика определения активной ссылки
+        const isActive = 
+          currentPath === linkPath || 
+          (!isRoot && currentPath.startsWith(`${linkPath}/`)) ||
+          (isRoot && currentPath === '/');
+        
+        if (isActive) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+    
+    // Обновляем состояние при загрузке
+    updateActiveLinks();
+    
+    // Обновляем состояние после клиентской навигации
+    document.addEventListener('clientNavigationComplete', () => {
+      updateActiveLinks();
+      // Закрываем мобильное меню, если оно открыто
+      if (mobileMenu.classList.contains('open')) {
+        closeMenu();
+      }
+    });
   });
 </script>
 
@@ -222,18 +270,36 @@ const { navItems } = Astro.props;
   }
   
   .mobile-menu-item {
+    padding: 0.75rem 1rem;
     display: block;
-    text-decoration: none;
     color: var(--text-color);
-    font-size: 1.625rem;
-    font-weight: 500;
-    padding: 0.5rem 0;
-    transition: color 0.2s ease;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s;
+    margin-bottom: 0.25rem;
+    font-size: 1.125rem;
+    position: relative;
   }
   
   .mobile-menu-item:hover {
-    color: var(--text-color-hover, var(--text-color));
-    opacity: 0.8;
+    background-color: rgba(var(--text-color-rgb), 0.1);
+  }
+  
+  .mobile-menu-item.active {
+    font-weight: 500;
+    background-color: rgba(var(--text-color-rgb), 0.15);
+  }
+  
+  .mobile-menu-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(to bottom, var(--particle-colors));
   }
   
   .mobile-menu-buttons {

@@ -2,7 +2,7 @@
 import Logo from '../Logo.astro';
 import Button from '../Button.astro';
 import NavbarItem from './NavbarItem.astro';
-import ModeToggle from '../ModeToggle.astro';
+import ModeToggle from '../ModeToggle.jsx';
 
 export interface Props {
   navItems: {
@@ -29,7 +29,7 @@ const { navItems } = Astro.props;
       </div>
     </div>
     <div class="navbar-actions">
-      <ModeToggle />
+      <ModeToggle client:load />
       <Button variant="simple" href="/login">Войти</Button>
       <Button href="/signup">Регистрация</Button>
     </div>
@@ -52,6 +52,35 @@ const { navItems } = Astro.props;
     
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Инициализация состояния
+    
+    // Обновление активных ссылок
+    function updateActiveLinks() {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('[data-nav-link]');
+      
+      navLinks.forEach(link => {
+        const linkPath = link.getAttribute('data-nav-link');
+        const isRoot = linkPath === '/';
+        
+        // Логика определения активной ссылки
+        const isActive = 
+          currentPath === linkPath || 
+          (!isRoot && currentPath.startsWith(`${linkPath}/`)) ||
+          (isRoot && currentPath === '/');
+        
+        if (isActive) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+    
+    // Обновляем состояние при загрузке
+    updateActiveLinks();
+    
+    // Обновляем состояние после клиентской навигации
+    document.addEventListener('clientNavigationComplete', updateActiveLinks);
   });
 </script>
 

@@ -58,4 +58,4 @@ span, section, main, article, aside, footer {
 /* Исключения для элементов, которые не должны анимироваться */
 .no-transition {
   transition: none !important;
-}
+} 

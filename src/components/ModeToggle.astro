@@ -1,111 +1,99 @@
 ---
-// Компонент переключения темы
+// Компонент для переключения между светлой и темной темой
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
 ---
 
-<button id="theme-toggle" aria-label="Переключить тему" class="mode-toggle-button">
-  <div class="icon-container">
-    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-    
-    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-    </svg>
-  </div>
+<button 
+  id="theme-toggle" 
+  aria-label="Переключить тему"
+  class={`theme-toggle-button ${className}`}
+>
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="20" 
+    height="20" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    stroke-width="2" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    class="sun-icon"
+  >
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="20" 
+    height="20" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    stroke-width="2" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    class="moon-icon"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
 </button>
 
 <style>
-  .mode-toggle-button {
-    position: relative;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--neutral-100);
+  .theme-toggle-button {
+    width: 36px;
+    height: 36px;
     border: none;
+    background: transparent;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    padding: 0;
-  }
-  
-  .mode-toggle-button:hover {
-    background-color: var(--neutral-800);
-    transform: scale(1.05);
-  }
-  
-  .mode-toggle-button:active {
-    transform: scale(0.95);
-  }
-  
-  .icon-container {
     position: relative;
-    width: 24px;
-    height: 24px;
-  }
-  
-  .sun-icon,
-  .moon-icon {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     color: var(--text-color);
-    transition: transform 0.5s cubic-bezier(0.45, 0.05, 0.55, 0.95),
-                opacity 0.5s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-    pointer-events: none;
+    border-radius: 50%;
+    transition: background-color 0.2s;
   }
   
-  /* В светлой теме солнце видимо, луна скрыта */
-  .sun-icon {
-    opacity: 1;
-    transform: rotate(0) scale(1);
+  .theme-toggle-button:hover {
+    background-color: var(--hover-bg);
   }
   
-  .moon-icon {
+  .sun-icon, .moon-icon {
+    position: absolute;
+    transition: opacity 0.2s ease, transform 0.3s ease;
+  }
+  
+  :global(.dark) .sun-icon {
     opacity: 0;
-    transform: rotate(90deg) scale(0.5);
+    transform: rotate(90deg);
   }
   
-  /* В темной теме луна видима, солнце скрыто */
-  :global(html.dark) .sun-icon {
-    opacity: 0;
-    transform: rotate(-90deg) scale(0.5);
-  }
-  
-  :global(html.dark) .moon-icon {
+  :global(.dark) .moon-icon {
     opacity: 1;
-    transform: rotate(0) scale(1);
+    transform: rotate(0);
   }
-</style>
-
-<script>
-  // Инициализируем переключатель темы, когда ThemeManager будет готов
-  document.addEventListener('themeManagerReady', () => {
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle && window.themeManager) {
-      // Устанавливаем начальное состояние
-      const currentTheme = window.themeManager.getTheme();
-      const isDark = currentTheme === 'dark' || 
-                    (currentTheme === 'system' && 
-                     window.matchMedia('(prefers-color-scheme: dark)').matches);
-      
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  });
-</script>
+  
+  :global(:not(.dark)) .sun-icon {
+    opacity: 1;
+    transform: rotate(0);
+  }
+  
+  :global(:not(.dark)) .moon-icon {
+    opacity: 0;
+    transform: rotate(-90deg);
+  }
+</style> 

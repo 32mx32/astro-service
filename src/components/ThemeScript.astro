@@ -1,46 +1,57 @@
 ---
-// Компонент, предотвращающий мигание темы при загрузке страницы
+// Этот компонент добавляет скрипт, который определяет текущую тему до рендеринга страницы
+// и предотвращает мигание (flash of incorrect theme)
 ---
 
 <script is:inline>
-  // Немедленно выполняемая функция (IIFE) - запускается до отрисовки страницы
+  // Этот скрипт выполняется до рендеринга страницы, чтобы избежать мигания неправильной темы
   (function() {
-    // Получаем сохраненную тему из localStorage
-    const savedTheme = localStorage.getItem('theme');
+    function getThemePreference() {
+      // Сначала проверяем сохраненное значение в localStorage
+      const savedTheme = typeof localStorage !== 'undefined' && localStorage.getItem('theme');
+      if (savedTheme) {
+        return savedTheme;
+      }
+      
+      // Если не найдено, проверяем системные настройки
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      // По умолчанию используем светлую тему
+      return 'light';
+    }
     
-    // Определяем предпочтения системы
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Скрываем страницу до применения темы для предотвращения мигания
-    document.documentElement.style.visibility = 'hidden';
-    
-    // Применяем тему до отрисовки страницы
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    // Применяем тему к HTML-тегу
+    const theme = getThemePreference();
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else if (savedTheme === 'light') {
+    } else {
       document.documentElement.classList.remove('dark');
     }
     
-    // Добавляем стиль для быстрого показа страницы после загрузки
-    const style = document.createElement('style');
-    style.innerHTML = `
-      /* Изначально скрываем, затем показываем при полной загрузке */
-      html {
-        visibility: hidden;
+    // Создаем глобальный API для работы с темой
+    window.themeManager = {
+      getTheme: function() {
+        return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      },
+      setTheme: function(newTheme) {
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        }
+        // Отправляем событие изменения темы
+        document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+      },
+      toggle: function() {
+        const currentTheme = this.getTheme();
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        this.setTheme(newTheme);
+        return newTheme;
       }
-      html.loaded {
-        visibility: visible;
-        transition: background-color 0.5s ease;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Делаем страницу видимой сразу после запуска скрипта
-    document.addEventListener('DOMContentLoaded', () => {
-      requestAnimationFrame(() => {
-        document.documentElement.classList.add('loaded');
-        document.documentElement.style.visibility = 'visible';
-      });
-    });
+    };
   })();
-</script>
+</script> 

@@ -3,8 +3,6 @@
 import '../styles/global.css';
 // Импортируем настройки тем
 import '../styles/theme.css';
-// Импортируем компонент для предотвращения мигания темы
-import ThemeScript from '../components/ThemeScript.astro';
 // Импортируем ThemeProvider для управления темой
 import ThemeProvider from '../context/ThemeProvider.astro';
 import Navbar from '../components/navbar/Navbar.astro';
@@ -23,10 +21,67 @@ const { title = "Astro Современный Проект" } = Astro.props;
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
+		<title>{Astro.props.title || 'Astro Сайт'}</title>
 		
-		<!-- Подключаем ThemeScript перед любыми другими скриптами и стилями -->
-		<ThemeScript />
+		<!-- Скрипт для предотвращения мигания темы -->
+		<script is:inline>
+			// Этот скрипт выполняется до рендеринга страницы, чтобы избежать мигания неправильной темы
+			(function() {
+				function getThemePreference() {
+					// Сначала проверяем сохраненное значение в localStorage
+					const savedTheme = typeof localStorage !== 'undefined' && localStorage.getItem('theme');
+					if (savedTheme) {
+						return savedTheme;
+					}
+					
+					// Если не найдено, проверяем системные настройки
+					if (typeof window !== 'undefined' && window.matchMedia) {
+						return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+					}
+					
+					// По умолчанию используем светлую тему
+					return 'light';
+				}
+				
+				// Применяем тему к HTML-тегу
+				const theme = getThemePreference();
+				if (theme === 'dark') {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+				
+				// Создаем глобальный API для работы с темой
+				window.themeManager = {
+					getTheme: function() {
+						return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+					},
+					setTheme: function(newTheme) {
+						if (newTheme === 'dark') {
+							document.documentElement.classList.add('dark');
+							localStorage.setItem('theme', 'dark');
+						} else {
+							document.documentElement.classList.remove('dark');
+							localStorage.setItem('theme', 'light');
+						}
+						// Отправляем событие изменения темы
+						document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+					},
+					toggle: function() {
+						const currentTheme = this.getTheme();
+						const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+						this.setTheme(newTheme);
+						return newTheme;
+					}
+				};
+			})();
+		</script>
+		
+		<!-- Скрипт для клиентской навигации -->
+		<script src="/scripts/client-navigation.js" is:inline></script>
+		
+		<!-- Дебаггер клиентской навигации -->
+		<script src="/scripts/client-navigation-debug.js" is:inline></script>
 		
 		<style>
 			/* Стили вынесены в theme.css, оставляем только специфичные */
@@ -37,12 +92,18 @@ const { title = "Astro Современный Проект" } = Astro.props;
 				font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 				background-color: var(--background-color);
 				color: var(--text-color);
+				position: relative;
 			}
 			
 			canvas {
 				background: var(--background-color);
 				width: 100vw;
 				height: 100vh;
+			}
+			
+			/* Стили для анимации загрузки при клиентской навигации */
+			.client-navigation-transition {
+				animation: fadeIn 0.3s ease forwards;
 			}
 			
 			/* Стиль для плавного появления контента */
@@ -52,16 +113,98 @@ const { title = "Astro Современный Проект" } = Astro.props;
 				animation-delay: 0.1s;
 			}
 			
+			/* Индикатор загрузки страницы */
+			.page-loader {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 3px;
+				background-color: transparent;
+				z-index: 9999;
+			}
+			
+			.page-loader::after {
+				content: '';
+				display: block;
+				height: 100%;
+				width: 0;
+				background: linear-gradient(to right, var(--particle-colors));
+				animation: loading 2s ease-in-out infinite;
+			}
+			
+			body[data-navigating="true"] .page-loader {
+				display: block;
+			}
+			
+			body:not([data-navigating="true"]) .page-loader {
+				display: none;
+			}
+			
 			@keyframes fadeIn {
 				from { opacity: 0; }
 				to { opacity: 1; }
+			}
+			
+			/* Стили для оверлея загрузки при переходах */
+			.navigation-progress {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 3px;
+				background: var(--background-color);
+				z-index: 9999;
+			}
+			
+			.navigation-progress::after {
+				content: '';
+				display: block;
+				height: 100%;
+				width: 0;
+				background: linear-gradient(to right, var(--particle-colors));
+				animation: loading 2s cubic-bezier(0.17, 0.67, 0.83, 0.67) infinite;
+			}
+			
+			/* Анимация для контентной области */
+			.content-area {
+				transition: opacity 0.3s ease, transform 0.3s ease;
+			}
+			
+			.content-area.fade-out {
+				opacity: 0;
+				transform: translateY(10px);
+			}
+			
+			.content-area.fade-in {
+				animation: fadeInContent 0.5s ease forwards;
+			}
+			
+			@keyframes fadeInContent {
+				from { 
+					opacity: 0;
+					transform: translateY(-10px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+			
+			@keyframes loading {
+				0% { width: 0; }
+				50% { width: 50%; }
+				100% { width: 100%; }
 			}
 		</style>
 	</head>
 	<body>
 		<!-- Оборачиваем весь контент в ThemeProvider -->
 		<ThemeProvider defaultTheme="system" enableSystem={true}>
-			<div class="content-wrapper">
+			<!-- Индикатор загрузки страницы -->
+			<div class="page-loader"></div>
+			
+			<div id="app" class="content-wrapper">
 				<Navbar />
 				<slot />
 			</div>
@@ -108,7 +251,70 @@ const { title = "Astro Современный Проект" } = Astro.props;
 						}
 					});
 				}
+				
+				// Устанавливаем статус навигации
+				function setNavigationStatus(isNavigating) {
+					document.body.setAttribute('data-navigating', isNavigating ? 'true' : 'false');
+				}
+				
+				// Начальное значение - не в процессе навигации
+				setNavigationStatus(false);
+				
+				// Обработчик начала навигации
+				document.addEventListener('clientNavigationStart', () => {
+					setNavigationStatus(true);
+					
+					// Добавляем класс для плавного исчезновения контента
+					const contentAreas = document.querySelectorAll('.content-area');
+					contentAreas.forEach(area => {
+						area.classList.add('fade-out');
+					});
+				});
+				
+				// Обработчик окончания клиентской навигации
+				document.addEventListener('clientNavigationComplete', (e) => {
+					console.log('Навигация завершена:', e.detail.url);
+					
+					setNavigationStatus(false);
+					
+					// Принудительно перезагружаем canvas, если он есть на странице
+					const canvas = document.getElementById('scene');
+					if (canvas) {
+						// Сохраняем родителя
+						const parent = canvas.parentNode;
+						// Клонируем canvas
+						const newCanvas = canvas.cloneNode(false);
+						// Заменяем старый canvas новым
+						parent.replaceChild(newCanvas, canvas);
+						
+						console.log('🔄 Canvas перезагружен для страницы:', e.detail.url);
+					}
+					
+					// Перерисовываем анимацию частиц после перехода
+					if (window.fullRestart) {
+						// Даем время на инициализацию DOM
+						setTimeout(() => window.fullRestart(), 50);
+					} else if (window.initScene) {
+						// Даем время на инициализацию DOM
+						setTimeout(() => window.initScene(), 50);
+					}
+					
+					// Обновляем иконки темы
+					updateToggleIcons();
+					
+					// Применяем класс анимации для плавного появления
+					const contentWrappers = document.querySelectorAll('.content-area');
+					contentWrappers.forEach(wrapper => {
+						wrapper.classList.remove('fade-out');
+						wrapper.classList.add('fade-in');
+						setTimeout(() => {
+							wrapper.classList.remove('fade-in');
+						}, 500);
+					});
+				});
 			});
 		</script>
 	</body>
 </html>
+
+<!-- Удаляем стандартные стили, так как будем использовать Tailwind -->

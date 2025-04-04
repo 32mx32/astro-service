@@ -1,255 +1,40 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import ParticleAnimation from '../components/ParticleAnimation.jsx';
 
 // Метаданные страницы
 const title = "Текстовые частицы";
 ---
 
 <Layout title={title}>
-	<canvas id="scene"></canvas>
-	<div class="text-input-container">
-		<input id="copy" type="text" value="CODEPEN ♥" />
-		<p class="instruction-text">Кликните в любом месте для изменения радиуса взаимодействия с мышью</p>
-	</div>
+	<main class="content-area">
+		<!-- Заменяем canvas на React-компонент с использованием client:visible -->
+		<ParticleAnimation text="ASTRO ♥" client:visible />
+	</main>
 </Layout>
 
 <style>
-	.text-input-container {
-		position: fixed;
-		bottom: 35px;
-		left: 0;
-		width: 100%;
-		text-align: center;
-		z-index: 40;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-	
-	.text-input-container.animate-in {
-		opacity: 0;
-		transform: translateY(20px);
-		transition: opacity 0.6s ease, transform 0.8s ease;
-	}
-	
-	.text-input-container.visible {
-		opacity: 1;
-		transform: translateY(0);
-	}
-	
-	input {
-		width: 250px;
-		height: 40px;
-		line-height: 40px;
-		background: none;
-		color: var(--text-color);
-		font-size: 30px;
-		font-family: arial;
-		text-align: center;
-		border: 1px solid var(--text-color);
-		background: rgba(var(--text-color-rgb), 0.1);
-		transition: color 0.3s, border-color 0.3s, transform 0.2s;
-		border-radius: 8px;
-	}
-	
-	input:focus {
-		outline: none;
-		transform: scale(1.05);
-		box-shadow: 0 0 15px rgba(var(--text-color-rgb), 0.2);
-	}
-	
-	.instruction-text {
-		font-size: 14px;
-		opacity: 0.6;
-		margin: 0;
-		color: var(--text-color);
-		transition: opacity 0.3s;
-	}
-	
-	.instruction-text:hover {
-		opacity: 1;
+	/* Стили для canvas остаются в глобальном файле стилей */
+	.content-area {
+		position: relative;
+		min-height: 100vh;
+		overflow: hidden;
 	}
 </style>
 
+<!-- Оставляем базовые обработчики для обратной совместимости -->
 <script>
-	var canvas = document.querySelector("#scene"),
-		ctx = canvas.getContext("2d"),
-		particles = [],
-		amount = 0,
-		mouse = {x:0,y:0},
-		radius = 1;
-
-	// Получение цветов из CSS переменных
-	function getParticleColors() {
-		const colorsString = getComputedStyle(document.documentElement)
-			.getPropertyValue('--particle-colors')
-			.trim();
-		return colorsString.split(',').map(color => color.trim());
-	}
-
-	var colors = getParticleColors();
-	var copy = document.querySelector("#copy");
-	var inputContainer = document.querySelector(".text-input-container");
-
-	var ww = canvas.width = window.innerWidth;
-	var wh = canvas.height = window.innerHeight;
-
-	function Particle(x,y){
-		this.x = Math.random()*ww;
-		this.y = Math.random()*wh;
-		this.dest = {
-			x : x,
-			y: y
-		};
-		this.r = Math.random()*5 + 2;
-		this.vx = (Math.random()-0.5)*20;
-		this.vy = (Math.random()-0.5)*20;
-		this.accX = 0;
-		this.accY = 0;
-		this.friction = Math.random()*0.05 + 0.94;
-
-		// Обновляем цвета при создании частицы
-		this.color = colors[Math.floor(Math.random()*colors.length)];
-	}
-
-	Particle.prototype.render = function() {
-		this.accX = (this.dest.x - this.x)/1000;
-		this.accY = (this.dest.y - this.y)/1000;
-		this.vx += this.accX;
-		this.vy += this.accY;
-		this.vx *= this.friction;
-		this.vy *= this.friction;
-
-		this.x += this.vx;
-		this.y += this.vy;
-
-		ctx.fillStyle = this.color;
-		ctx.beginPath();
-		ctx.arc(this.x, this.y, this.r, Math.PI * 2, false);
-		ctx.fill();
-
-		var a = this.x - mouse.x;
-		var b = this.y - mouse.y;
-
-		var distance = Math.sqrt(a*a + b*b);
-		if(distance < (radius*70)){
-			this.accX = (this.x - mouse.x)/100;
-			this.accY = (this.y - mouse.y)/100;
-			this.vx += this.accX;
-			this.vy += this.accY;
-		}
-	}
-
-	function onMouseMove(e){
-		mouse.x = e.clientX;
-		mouse.y = e.clientY;
-	}
-
-	function onTouchMove(e){
-		if(e.touches.length > 0 ){
-			mouse.x = e.touches[0].clientX;
-			mouse.y = e.touches[0].clientY;
-		}
-	}
-
-	function onTouchEnd(e){
-		mouse.x = -9999;
-		mouse.y = -9999;
-	}
-
-	function initScene(){
-		// Обновляем цвета частиц при инициализации сцены
-		colors = getParticleColors();
-		
-		ww = canvas.width = window.innerWidth;
-		wh = canvas.height = window.innerHeight;
-
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-		ctx.font = "bold "+(ww/10)+"px sans-serif";
-		ctx.textAlign = "center";
-		ctx.fillText(copy.value, ww/2, wh/2);
-
-		var data = ctx.getImageData(0, 0, ww, wh).data;
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.globalCompositeOperation = "screen";
-
-		particles = [];
-		for(var i=0;i<ww;i+=Math.round(ww/150)){
-			for(var j=0;j<wh;j+=Math.round(ww/150)){
-				if(data[ ((i + j*ww)*4) + 3] > 150){
-					particles.push(new Particle(i,j));
-				}
+	document.addEventListener('clientNavigationComplete', (e) => {
+		// Проверяем, что мы перешли на главную страницу
+		if (window.location.pathname === '/' || window.location.pathname === '') {
+			console.log('🏠 Вернулись на главную страницу - перезапускаем анимацию частиц');
+			
+			// Используем React-функцию если доступна, иначе старую
+			if (window.reactFullRestart) {
+				window.reactFullRestart();
+			} else if (window.fullRestart) {
+				window.fullRestart();
 			}
 		}
-		amount = particles.length;
-	}
-
-	function onMouseClick(){
-		radius++;
-		if(radius === 5){
-			radius = 0;
-		}
-	}
-
-	function render(a) {
-		requestAnimationFrame(render);
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		for (var i = 0; i < amount; i++) {
-			particles[i].render();
-		}
-	};
-
-	// Эффектная анимация инициализации
-	function startAnimation() {
-		// Проверяем, первая ли это загрузка
-		const isFirstLoad = sessionStorage.getItem('particlesAnimationDone') !== 'true';
-		
-		// Сначала инициализируем сцену
-		initScene();
-		
-		// Запускаем анимацию
-		requestAnimationFrame(render);
-		
-		if (isFirstLoad && document.referrer === '') {
-			// Первая загрузка или обновление страницы - запускаем анимацию
-			if (inputContainer) {
-				inputContainer.classList.add('animate-in');
-				
-				// Показываем элементы управления через некоторое время
-				setTimeout(() => {
-					inputContainer.classList.add('visible');
-					
-					// Запоминаем, что анимация была выполнена
-					sessionStorage.setItem('particlesAnimationDone', 'true');
-					
-					// Удаляем класс анимации по завершении
-					setTimeout(() => {
-						inputContainer.classList.remove('animate-in');
-					}, 800);
-				}, 2200); // Показываем чуть позже навбара
-			}
-		} else {
-			// Переход между страницами - без анимации
-			if (inputContainer) {
-				inputContainer.classList.remove('animate-in');
-				inputContainer.style.opacity = '1';
-				inputContainer.style.transform = 'translateY(0)';
-			}
-		}
-	}
-
-	// Добавляем функцию initScene в глобальную область видимости
-	window.initScene = initScene;
-
-	copy.addEventListener("keyup", initScene);
-	window.addEventListener("resize", initScene);
-	window.addEventListener("mousemove", onMouseMove);
-	window.addEventListener("touchmove", onTouchMove);
-	window.addEventListener("click", onMouseClick);
-	window.addEventListener("touchend", onTouchEnd);
-	
-	// Запускаем анимацию при загрузке страницы
-	document.addEventListener('DOMContentLoaded', startAnimation);
+	});
 </script>
