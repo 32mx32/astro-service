@@ -1,11 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 
 // React-компонент для интерактивной анимации частиц
-export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
+export default function ParticleAnimation({ text = 'ASTRO ♥', className = '' }) {
+  // Настройки анимации 
+  const CONFIG = {
+    // Размер частиц: [мин, макс]
+    particleSize: [1, 2],
+    // Скорость движения частиц: [мин, макс]
+    particleSpeed: [0.5, 20],
+    // Трение для плавности движения: [мин, макс]
+    friction: [0.94, 0.99],
+    // Сила взаимодействия с курсором
+    mouseForce: 100,
+    // Шаг сетки для определения плотности частиц (меньше = больше частиц)
+    gridStep: 200,
+    // Пороговое значение для создания частиц из текста
+    alphaThreshold: 150
+  };
+
   // Ссылка на canvas элемент
   const canvasRef = useRef(null);
-  // Ссылка на input для изменения текста
-  const inputRef = useRef(null);
   // Состояние для текста
   const [canvasText, setCanvasText] = useState(text);
   // Состояние радиуса взаимодействия
@@ -36,12 +50,12 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
       this.x = Math.random() * dimensionsRef.current.width;
       this.y = Math.random() * dimensionsRef.current.height;
       this.dest = { x, y };
-      this.r = Math.random() * 2 + 1;
-      this.vx = (Math.random() - 0.5) * 20;
-      this.vy = (Math.random() - 0.5) * 20;
+      this.r = Math.random() * (CONFIG.particleSize[1] - CONFIG.particleSize[0]) + CONFIG.particleSize[0];
+      this.vx = (Math.random() - 0.5) * CONFIG.particleSpeed[1];
+      this.vy = (Math.random() - 0.5) * CONFIG.particleSpeed[1];
       this.accX = 0;
       this.accY = 0;
-      this.friction = Math.random() * 0.05 + 0.94;
+      this.friction = Math.random() * (CONFIG.friction[1] - CONFIG.friction[0]) + CONFIG.friction[0];
       this.color = colorsRef.current[Math.floor(Math.random() * colorsRef.current.length)];
     }
     
@@ -66,8 +80,8 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
       
       const distance = Math.sqrt(a*a + b*b);
       if (distance < (radius * 70)) {
-        this.accX = (this.x - mouseRef.current.x) / 100;
-        this.accY = (this.y - mouseRef.current.y) / 100;
+        this.accX = (this.x - mouseRef.current.x) / CONFIG.mouseForce;
+        this.accY = (this.y - mouseRef.current.y) / CONFIG.mouseForce;
         this.vx += this.accX;
         this.vy += this.accY;
       }
@@ -105,9 +119,10 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
     
     // Создаем частицы
     particlesRef.current = [];
-    for (let i = 0; i < dimensionsRef.current.width; i += Math.round(dimensionsRef.current.width / 200)) {
-      for (let j = 0; j < dimensionsRef.current.height; j += Math.round(dimensionsRef.current.width / 200)) {
-        if (imageData[((i + j * dimensionsRef.current.width) * 4) + 3] > 150) {
+    const step = Math.round(dimensionsRef.current.width / CONFIG.gridStep);
+    for (let i = 0; i < dimensionsRef.current.width; i += step) {
+      for (let j = 0; j < dimensionsRef.current.height; j += step) {
+        if (imageData[((i + j * dimensionsRef.current.width) * 4) + 3] > CONFIG.alphaThreshold) {
           particlesRef.current.push(new Particle(i, j));
         }
       }
@@ -158,14 +173,6 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
     console.log('🔄 React-анимация полностью перезапущена');
   };
   
-  // Изменение текста
-  const handleTextChange = (e) => {
-    setCanvasText(e.target.value);
-    
-    // Перезапускаем анимацию с новым текстом
-    setTimeout(initScene, 10);
-  };
-  
   // Инициализация компонента
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -214,13 +221,6 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
     };
   }, []);
   
-  // Обновление анимации при изменении текста
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.value = canvasText;
-    }
-  }, [canvasText]);
-  
   return (
     <div className={`particle-animation-container ${className}`}>
       <canvas 
@@ -228,19 +228,6 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
         id="react-scene"
         className="absolute inset-0 w-full h-full"
       />
-      
-      <div className="text-input-container fixed bottom-8 w-full text-center z-40 flex flex-col items-center gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          defaultValue={canvasText}
-          onChange={handleTextChange}
-          className="w-64 h-10 text-center bg-transparent text-2xl border border-current rounded-lg"
-        />
-        <p className="text-sm opacity-60 hover:opacity-100 transition-opacity">
-          Кликните в любом месте для изменения радиуса взаимодействия с мышью
-        </p>
-      </div>
     </div>
   );
 } 

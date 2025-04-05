@@ -47,7 +47,7 @@ const posts = [
 
 <Layout title={title}>
 	<main class="content-area">
-		<canvas id="scene"></canvas>
+		<div class="background-gradient"></div>
 		<div class="blog-container">
 			<h1>Блог</h1>
 			<div class="blog-intro">
@@ -81,128 +81,21 @@ const posts = [
 	</main>
 </Layout>
 
-<script>
-	// Упрощенная версия анимации для фона страницы (такая же как на странице About)
-	var canvas = document.querySelector("#scene"),
-		ctx = canvas.getContext("2d"),
-		particles = [],
-		amount = 250,
-		mouse = {x: 0, y: 0},
-		radius = 1;
-
-	function getParticleColors() {
-		const colorsString = getComputedStyle(document.documentElement)
-			.getPropertyValue('--particle-colors')
-			.trim();
-		return colorsString.split(',').map(color => color.trim());
-	}
-
-	var colors = getParticleColors();
-	var ww = canvas.width = window.innerWidth;
-	var wh = canvas.height = window.innerHeight;
-
-	function Particle() {
-		this.x = Math.random() * ww;
-		this.y = Math.random() * wh;
-		this.r = Math.random() * 2 + 1;
-		this.vx = (Math.random() - 0.5) * 2;
-		this.vy = (Math.random() - 0.5) * 2;
-		this.color = colors[Math.floor(Math.random() * colors.length)];
-	}
-
-	Particle.prototype.render = function() {
-		this.x += this.vx;
-		this.y += this.vy;
-		
-		// Отскок от краев
-		if (this.x < 0 || this.x > ww) this.vx = -this.vx;
-		if (this.y < 0 || this.y > wh) this.vy = -this.vy;
-		
-		// Взаимодействие с мышью
-		var a = this.x - mouse.x;
-		var b = this.y - mouse.y;
-		var distance = Math.sqrt(a * a + b * b);
-		
-		if (distance < (radius * 70)) {
-			this.vx = a * 0.01;
-			this.vy = b * 0.01;
-		}
-		
-		// Рисуем частицу
-		ctx.fillStyle = this.color;
-		ctx.beginPath();
-		ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-		ctx.fill();
-		
-		// Соединяем близкие частицы линиями
-		for (var i = 0; i < particles.length; i++) {
-			var p2 = particles[i];
-			var dx = this.x - p2.x;
-			var dy = this.y - p2.y;
-			var dist = Math.sqrt(dx * dx + dy * dy);
-			
-			if (dist < 100) {
-				ctx.beginPath();
-				ctx.strokeStyle = this.color;
-				ctx.globalAlpha = 0.5 - dist / 100;
-				ctx.lineWidth = 0.3;
-				ctx.moveTo(this.x, this.y);
-				ctx.lineTo(p2.x, p2.y);
-				ctx.stroke();
-				ctx.globalAlpha = 1;
-			}
-		}
-	}
-
-	function onMouseMove(e) {
-		mouse.x = e.clientX;
-		mouse.y = e.clientY;
-	}
-
-	function onTouchMove(e) {
-		if (e.touches.length > 0) {
-			mouse.x = e.touches[0].clientX;
-			mouse.y = e.touches[0].clientY;
-		}
-	}
-
-	function onTouchEnd(e) {
-		mouse.x = -9999;
-		mouse.y = -9999;
-	}
-
-	function initScene() {
-		colors = getParticleColors();
-		ww = canvas.width = window.innerWidth;
-		wh = canvas.height = window.innerHeight;
-		
-		particles = [];
-		for (var i = 0; i < amount; i++) {
-			particles.push(new Particle());
-		}
-	}
-
-	function render() {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		for (var i = 0; i < amount; i++) {
-			particles[i].render();
-		}
-		requestAnimationFrame(render);
-	}
-
-	// Добавляем в глобальную область
-	window.initScene = initScene;
-
-	window.addEventListener("resize", initScene);
-	window.addEventListener("mousemove", onMouseMove);
-	window.addEventListener("touchmove", onTouchMove);
-	window.addEventListener("touchend", onTouchEnd);
-	
-	initScene();
-	requestAnimationFrame(render);
-</script>
-
 <style>
+	.background-gradient {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(135deg, 
+			rgba(var(--bg-color-rgb), 0.7) 0%, 
+			rgba(var(--bg-color-rgb), 0.5) 50%, 
+			rgba(var(--bg-color-rgb), 0.7) 100%);
+		z-index: 1;
+		pointer-events: none;
+	}
+
 	.blog-container {
 		max-width: 1200px;
 		margin: 120px auto 40px;
