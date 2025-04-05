@@ -44,7 +44,7 @@ const title = "О проекте";
 	var canvas = document.querySelector("#scene"),
 		ctx = canvas.getContext("2d"),
 		particles = [],
-		amount = 150,
+		amount = 250,
 		mouse = {x: 0, y: 0},
 		radius = 1;
 
@@ -62,7 +62,7 @@ const title = "О проекте";
 	function Particle() {
 		this.x = Math.random() * ww;
 		this.y = Math.random() * wh;
-		this.r = Math.random() * 3 + 1;
+		this.r = Math.random() * 2 + 1;
 		this.vx = (Math.random() - 0.5) * 2;
 		this.vy = (Math.random() - 0.5) * 2;
 		this.color = colors[Math.floor(Math.random() * colors.length)];
@@ -103,7 +103,7 @@ const title = "О проекте";
 				ctx.beginPath();
 				ctx.strokeStyle = this.color;
 				ctx.globalAlpha = 0.5 - dist / 100;
-				ctx.lineWidth = 0.5;
+				ctx.lineWidth = 0.3;
 				ctx.moveTo(this.x, this.y);
 				ctx.lineTo(p2.x, p2.y);
 				ctx.stroke();

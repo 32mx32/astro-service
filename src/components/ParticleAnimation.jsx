@@ -36,7 +36,7 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
       this.x = Math.random() * dimensionsRef.current.width;
       this.y = Math.random() * dimensionsRef.current.height;
       this.dest = { x, y };
-      this.r = Math.random() * 5 + 2;
+      this.r = Math.random() * 2 + 1;
       this.vx = (Math.random() - 0.5) * 20;
       this.vy = (Math.random() - 0.5) * 20;
       this.accX = 0;
@@ -105,8 +105,8 @@ export default function ParticleAnimation({ text = 'ASTRO', className = '' }) {
     
     // Создаем частицы
     particlesRef.current = [];
-    for (let i = 0; i < dimensionsRef.current.width; i += Math.round(dimensionsRef.current.width / 150)) {
-      for (let j = 0; j < dimensionsRef.current.height; j += Math.round(dimensionsRef.current.width / 150)) {
+    for (let i = 0; i < dimensionsRef.current.width; i += Math.round(dimensionsRef.current.width / 200)) {
+      for (let j = 0; j < dimensionsRef.current.height; j += Math.round(dimensionsRef.current.width / 200)) {
         if (imageData[((i + j * dimensionsRef.current.width) * 4) + 3] > 150) {
           particlesRef.current.push(new Particle(i, j));
         }
